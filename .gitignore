@@ -1,0 +1,4 @@
+# Ignorar datos persistentes
+n8n_data/
+__pycache__/
+*.log
