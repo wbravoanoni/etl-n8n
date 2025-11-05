@@ -2,3 +2,4 @@
 n8n_data/
 __pycache__/
 *.log
+.env
