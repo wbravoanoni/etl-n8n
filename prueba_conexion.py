@@ -11,7 +11,7 @@ DB_PASSWORD = os.getenv("DB_PASSWORD")
 JDBC_DRIVER_NAME = os.getenv("JDBC_DRIVER_NAME")
 JDBC_DRIVER_PATH = os.getenv("JDBC_DRIVER_PATH")
 
-print("=== Probando conexión IRIS ===")
+print("==== Probando conexión IRIS ====")
 print("URL:", CONEXION_STRING)
 print("Driver:", JDBC_DRIVER_NAME)
 print("JAR:", JDBC_DRIVER_PATH)
