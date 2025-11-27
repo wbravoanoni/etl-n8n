@@ -4,7 +4,7 @@ import mysql.connector
 from dotenv import load_dotenv
 import os
 import logging
-
+import sys
 from datetime import datetime
 from cryptography.fernet import Fernet
 
@@ -41,6 +41,10 @@ def encrypt_parity_check(message):
     encrypted = fernet.encrypt(message.encode())
     return encrypted
 
+def fail_and_exit(message):
+    logging.error(message)
+    sys.exit(1)
+
 conn_mysql = None
 conn_iris = None
 cursor_iris = None
@@ -49,26 +53,26 @@ cursor_mysql = None
 try:
     # Validar variables de entorno
     if not jdbc_driver_name or not jdbc_driver_loc:
-        logging.error("El nombre o la ruta del controlador JDBC no están configurados correctamente.")
-        raise ValueError("El nombre o la ruta del controlador JDBC no están configurados correctamente.")
+        fail_and_exit("El nombre o la ruta del controlador JDBC no están configurados correctamente.")
     if not iris_connection_string or not iris_user or not iris_password:
-        logging.error("Las variables de entorno de InterSystems IRIS no están configuradas correctamente.")
-        raise ValueError("Las variables de entorno de InterSystems IRIS no están configuradas correctamente.")
+        fail_and_exit("Las variables de entorno de InterSystems IRIS no están configuradas correctamente.")
     if not mysql_host or not mysql_port or not mysql_user or not mysql_password or not mysql_database:
-        logging.error("Las variables de entorno de MySQL no están configuradas correctamente.")
-        raise ValueError("Las variables de entorno de MySQL no están configuradas correctamente.")
+        fail_and_exit("Las variables de entorno de MySQL no están configuradas correctamente.")
     
     # Iniciar JVM si no está ya iniciada
     if not jpype.isJVMStarted():
         jpype.startJVM(jpype.getDefaultJVMPath(), "-Djava.class.path=" + jdbc_driver_loc)
 
     # Crear conexión con InterSystems IRIS
-    conn_iris = jaydebeapi.connect(
-        jdbc_driver_name,
-        iris_connection_string,
-        {'user': iris_user, 'password': iris_password},
-        jdbc_driver_loc
-    )
+    try:
+        conn_iris = jaydebeapi.connect(
+            jdbc_driver_name,
+            iris_connection_string,
+            {'user': iris_user, 'password': iris_password},
+            jdbc_driver_loc
+        )
+    except Exception as e:
+        fail_and_exit(f"Error conectando a IRIS: {e}")
 
     # Consulta SQL para obtener datos
     query = ''' 
@@ -180,13 +184,13 @@ try:
             AND sched.AS_RES_ParRef->RES_CTLOC_DR->CTLOC_HOSPITAL_DR = 10448 
             AND sched.AS_RES_ParRef->RES_CTLOC_DR->CTLOC_RowID = 2831;
         '''
-    
-        #   2831 Policlínico de Cirugía-Proctología HDS
 
-    # Ejecutar consulta en InterSystems IRIS
     cursor_iris = conn_iris.cursor()
-    cursor_iris.execute(query)
-    rows = cursor_iris.fetchall()
+    try:
+        cursor_iris.execute(query)
+        rows = cursor_iris.fetchall()
+    except Exception as e:
+        fail_and_exit(f"Error ejecutando consulta IRIS: {e}")
 
     # Convertir filas a formato adecuado para MySQL
     formatted_rows = []
@@ -196,25 +200,27 @@ try:
         formatted_rows.append(tuple(valores + [fechaActualizacion]))
         
     # Conectar a MySQL
-    conn_mysql = mysql.connector.connect(
-        host=mysql_host,
-        port=mysql_port,
-        user=mysql_user,
-        password=mysql_password,
-        database=mysql_database
-    )
+    try:
+        conn_mysql = mysql.connector.connect(
+            host=mysql_host,
+            port=mysql_port,
+            user=mysql_user,
+            password=mysql_password,
+            database=mysql_database
+        )
+    except Exception as e:
+        fail_and_exit(f"Error conectando a MySQL: {e}")
+
     cursor_mysql = conn_mysql.cursor()
 
     # Truncar la tabla en MySQL
     try:
         cursor_mysql.execute("TRUNCATE TABLE z_usabilidad_coloproctologia_agendas_evoluciones")
         conn_mysql.commit()
-        logging.info("Tabla 'z_usabilidad_coloproctologia_agendas_evoluciones' truncada exitosamente.")
-    except mysql.connector.Error as e:
-        logging.error(f"Error al truncar la tabla: {e}")
-        raise
+    except Exception as e:
+        fail_and_exit(f"Error al truncar tabla MySQL: {e}")
 
-    # Insertar datos en MySQL en chunks
+    # Insertar datos en MySQL
     insert_query = """
         INSERT INTO z_usabilidad_coloproctologia_agendas_evoluciones (
         nro_episodio,
@@ -243,22 +249,22 @@ try:
         )
     """
 
-    chunk_size = 1000  # Ajusta este tamaño según sea necesario
-    for i in range(0, len(formatted_rows), chunk_size):
-        chunk = formatted_rows[i:i + chunk_size]
-        cursor_mysql.executemany(insert_query, chunk)
-        conn_mysql.commit()
+    try:
+        chunk_size = 1000
+        for i in range(0, len(formatted_rows), chunk_size):
+            chunk = formatted_rows[i:i + chunk_size]
+            cursor_mysql.executemany(insert_query, chunk)
+            conn_mysql.commit()
+    except Exception as e:
+        fail_and_exit(f"Error insertando registros en MySQL: {e}")
+
     logging.info("Datos transferidos exitosamente.")
-except jaydebeapi.DatabaseError as e:
-    logging.error(f"Error en InterSystems IRIS: {e}")
-except mysql.connector.Error as e:
-    logging.error(f"Error en MySQL: {e}")
-except ValueError as e:
-    logging.error(f"Error en la configuración: {e}")
+    sys.exit(0)
+
 except Exception as e:
-    logging.error(f"Error: {e}")
+    fail_and_exit(f"Error inesperado: {e}")
+
 finally:
-    # Cerrar cursores y conexiones
     if cursor_iris:
         cursor_iris.close()
     if conn_iris:
@@ -267,6 +273,5 @@ finally:
         cursor_mysql.close()
     if conn_mysql:
         conn_mysql.close()
-    # Detener la JVM si la iniciamos
     if jpype.isJVMStarted():
         jpype.shutdownJVM()
