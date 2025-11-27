@@ -15,4 +15,15 @@ if __name__ == "__main__":
     for script in scripts:
         script_path = os.path.join(BASE, script)
         print(f"\n=== Ejecutando: {script} ===")
-        subprocess.run([sys.executable, script_path], cwd=PROJECT_ROOT)  # ✅ Corre en la carpeta donde está .env y el .jar
+
+        result = subprocess.run(
+            [sys.executable, script_path],
+            cwd=PROJECT_ROOT
+        )
+
+        if result.returncode != 0:
+            print(f"❌ ERROR ejecutando {script}")
+            print(f"Return code: {result.returncode}")
+            sys.exit(1) 
+
+    sys.exit(0)
