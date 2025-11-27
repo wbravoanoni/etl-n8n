@@ -4,15 +4,20 @@ import mysql.connector
 from dotenv import load_dotenv
 import os
 import logging
+import sys
 from datetime import datetime
 from cryptography.fernet import Fernet
 
 load_dotenv(override=True)
 
-logging.basicConfig(level=logging.INFO, 
-                    format='%(asctime)s - %(threadName)s - %(processName)s %(levelname)s - %(message)s',
-                    handlers=[logging.FileHandler("logs/z_usabilidad_uto_evoluciones.log"),
-                        logging.StreamHandler()])
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(threadName)s - %(processName)s %(levelname)s - %(message)s',
+    handlers=[
+        logging.FileHandler("logs/z_usabilidad_uto_evoluciones.log"),
+        logging.StreamHandler()
+    ]
+)
 
 jdbc_driver_name = os.getenv('JDBC_DRIVER_NAME')
 jdbc_driver_loc = os.getenv('JDBC_DRIVER_PATH')
@@ -26,12 +31,14 @@ mysql_user = os.getenv('DB_MYSQL_USER')
 mysql_password = os.getenv('DB_MYSQL_PASSWORD')
 mysql_database = os.getenv('DB_MYSQL_DATABASE')
 
+def fail_and_exit(message):
+    logging.error(message)
+    sys.exit(1)
+
 def encrypt_parity_check(message):
-    load_dotenv()
     key = os.getenv('ENCRYPTION_KEY').encode()
     fernet = Fernet(key)
-    encrypted = fernet.encrypt(message.encode())
-    return encrypted
+    return fernet.encrypt(message.encode())
 
 conn_mysql = None
 conn_iris = None
@@ -39,28 +46,34 @@ cursor_iris = None
 cursor_mysql = None
 
 try:
+    # VALIDACIONES
     if not jdbc_driver_name or not jdbc_driver_loc:
-        logging.error("El nombre o la ruta del controlador JDBC no están configurados correctamente.")
-        raise ValueError("El nombre o la ruta del controlador JDBC no están configurados correctamente.")
-    if not iris_connection_string or not iris_user or not iris_password:
-        logging.error("Las variables de entorno de InterSystems IRIS no están configuradas correctamente.")
-        raise ValueError("Las variables de entorno de InterSystems IRIS no están configuradas correctamente.")
-    if not mysql_host or not mysql_port or not mysql_user or not mysql_password or not mysql_database:
-        logging.error("Las variables de entorno de MySQL no están configuradas correctamente.")
-        raise ValueError("Las variables de entorno de MySQL no están configuradas correctamente.")
+        fail_and_exit("JDBC_DRIVER_NAME o JDBC_DRIVER_PATH no configurados.")
 
+    if not iris_connection_string or not iris_user or not iris_password:
+        fail_and_exit("Variables IRIS no configuradas correctamente.")
+
+    if not mysql_host or not mysql_port or not mysql_user or not mysql_password or not mysql_database:
+        fail_and_exit("Variables MySQL no configuradas correctamente.")
+
+    # INICIAR JVM
     if not jpype.isJVMStarted():
         jpype.startJVM(jpype.getDefaultJVMPath(), "-Djava.class.path=" + jdbc_driver_loc)
 
-    conn_iris = jaydebeapi.connect(
-        jdbc_driver_name,
-        iris_connection_string,
-        {'user': iris_user, 'password': iris_password},
-        jdbc_driver_loc
-    )
+    # CONEXIÓN A IRIS
+    try:
+        conn_iris = jaydebeapi.connect(
+            jdbc_driver_name,
+            iris_connection_string,
+            {'user': iris_user, 'password': iris_password},
+            jdbc_driver_loc
+        )
+    except Exception as e:
+        fail_and_exit(f"Error conectando a IRIS: {e}")
 
     cursor_iris = conn_iris.cursor()
 
+    # CONSULTA IRIS
     query = f'''
         SELECT DISTINCT 
         b.NOT_ParRef->MRADM_ADM_DR->PAAdm_AdmNo AS "NumeroEpisodio",
@@ -84,62 +97,75 @@ try:
         AND a.ENC_StartDate >= '2025-04-23'
         AND a.ENC_Loc_DR IN (4070,4994);
     '''
-    
-# 4070  HDS- UTO    Policlínico de Trauma Ocular HDS
-# 4994  HDS-07-854  Procedimientos UTO HDS
 
+    try:
+        cursor_iris.execute(query)
+        rows = cursor_iris.fetchall()
+    except Exception as e:
+        fail_and_exit(f"Error ejecutando consulta IRIS: {e}")
 
-    cursor_iris.execute(query)
-    rows = cursor_iris.fetchall()
-
+    # FORMATEAR
     formatted_rows = []
     for row in rows:
         valores = [str(col) if col is not None else '' for col in row]
         fechaActualizacion = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
         formatted_rows.append(tuple(valores + [fechaActualizacion]))
 
-    conn_mysql = mysql.connector.connect(
-        host=mysql_host,
-        port=mysql_port,
-        user=mysql_user,
-        password=mysql_password,
-        database=mysql_database
-    )
+    # CONEXIÓN MYSQL
+    try:
+        conn_mysql = mysql.connector.connect(
+            host=mysql_host,
+            port=mysql_port,
+            user=mysql_user,
+            password=mysql_password,
+            database=mysql_database
+        )
+    except Exception as e:
+        fail_and_exit(f"Error conectando a MySQL: {e}")
+
     cursor_mysql = conn_mysql.cursor()
 
-    cursor_mysql.execute("TRUNCATE TABLE z_usabilidad_uto_evoluciones")
-    conn_mysql.commit()
+    # TRUNCATE
+    try:
+        cursor_mysql.execute("TRUNCATE TABLE z_usabilidad_uto_evoluciones")
+        conn_mysql.commit()
+    except Exception as e:
+        fail_and_exit(f"Error al truncar MySQL: {e}")
 
+    # INSERT
     insert_query = """
         INSERT INTO z_usabilidad_uto_evoluciones (
-        NumeroEpisodio,
-        Estado_Evolucion,
-        Grupo_Evolucion,
-        Tipo_Evolucion,
-        Usuario_Evolucion,
-        FechaEvolucion,
-        HoraEvolucion,
-        ProfesionalEvolucion,
-        EstamentoProfesional,
-        local_usuario,
-        Local_Encuentro,
-        fechaActualizacion
-
+            NumeroEpisodio,
+            Estado_Evolucion,
+            Grupo_Evolucion,
+            Tipo_Evolucion,
+            Usuario_Evolucion,
+            FechaEvolucion,
+            HoraEvolucion,
+            ProfesionalEvolucion,
+            EstamentoProfesional,
+            local_usuario,
+            Local_Encuentro,
+            fechaActualizacion
         ) VALUES (
             %s, %s, %s, %s, %s, %s, %s, %s, %s, %s,
             %s, %s
         )
     """
 
-    chunk_size = 1000
-    for i in range(0, len(formatted_rows), chunk_size):
-        chunk = formatted_rows[i:i + chunk_size]
-        cursor_mysql.executemany(insert_query, chunk)
-        conn_mysql.commit()
+    try:
+        for i in range(0, len(formatted_rows), 1000):
+            chunk = formatted_rows[i:i + 1000]
+            cursor_mysql.executemany(insert_query, chunk)
+            conn_mysql.commit()
+    except Exception as e:
+        fail_and_exit(f"Error insertando datos en MySQL: {e}")
+
     logging.info("Datos transferidos exitosamente.")
+    sys.exit(0)
 
 except Exception as e:
-    logging.error(f"Error: {e}")
+    fail_and_exit(f"Error inesperado: {e}")
 
 finally:
     if cursor_iris:
