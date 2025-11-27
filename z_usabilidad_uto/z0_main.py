@@ -5,6 +5,10 @@ import os
 BASE = os.path.dirname(os.path.abspath(__file__))
 PROJECT_ROOT = os.path.dirname(BASE)   # ✅ Carpeta donde está .env y el .jar
 
+def fail_and_exit(msg):
+    print(f"[ERROR] {msg}")
+    sys.exit(1)
+
 scripts = [
     "z_usabilidad_uto_contrareferencias.py",
     "z_usabilidad_uto_diagnosticos.py",
@@ -14,7 +18,21 @@ scripts = [
 ]
 
 if __name__ == "__main__":
-    for script in scripts:
-        script_path = os.path.join(BASE, script)
-        print(f"\n=== Ejecutando: {script} ===")
-        subprocess.run([sys.executable, script_path], cwd=PROJECT_ROOT)  # ✅ Corre en la carpeta donde está .env y el .jar
+    try:
+        for script in scripts:
+            script_path = os.path.join(BASE, script)
+            print(f"\n=== Ejecutando: {script} ===")
+
+            result = subprocess.run(
+                [sys.executable, script_path],
+                cwd=PROJECT_ROOT
+            )
+
+            if result.returncode != 0:
+                fail_and_exit(f"El script {script} terminó con error (exit code {result.returncode}).")
+
+        print("\nTodos los scripts finalizados correctamente.")
+        sys.exit(0)
+
+    except Exception as e:
+        fail_and_exit(f"Error inesperado al ejecutar scripts: {e}")
