@@ -75,7 +75,7 @@ try:
             from questionnaire.QTCERIESDSM as a
             INNER JOIN SS_User b on a.QUESCreateUserDR=b.SSUSR_RowId
             LEFT JOIN PA_Adm c on a.QUESPAAdmDR = c.PAADM_RowID
-            WHERE QUESDate >= DATEADD(YEAR, -1, GETDATE()) AND
+            WHERE QUESDate >= DATEADD(MONTH, -6, GETDATE()) AND
             PAADM_DepCode_DR->CTLOC_Hospital_DR = 10448;
         '''
     #QUESDate >='2024-10-01'
