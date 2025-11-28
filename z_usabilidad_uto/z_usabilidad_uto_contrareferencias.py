@@ -73,97 +73,97 @@ try:
 
     query = ''' 
         SELECT top 100
-        PAADM_ADMNO "nro_episodio",
-        PAADM_PAPMI_DR->PAPMI_no "nro_registro",
-        (SELECT TOP 1
-            APPT_AS_ParRef->AS_RES_ParRef->RES_CTLOC_DR->CTLOC_desc
-            FROM RB_APPOINTMENT 
-            WHERE 
-            APPT_AS_ParRef->AS_Date <= PAADM_DischgDate  
-            and APPT_PAPMI_DR = PAADM_PAPMI_DR
-            and APPT_Adm_DR = PAADM_RowID 
-            order by APPT_AS_ParRef->AS_Date desc 
-        ) as "local",
-        (SELECT TOP 1
-            APPT_AS_ParRef->AS_RES_ParRef->RES_Code
-            FROM RB_APPOINTMENT 
-            WHERE 
-            APPT_AS_ParRef->AS_Date <= PAADM_DischgDate  
-            and APPT_PAPMI_DR = PAADM_PAPMI_DR
-            and APPT_Adm_DR = PAADM_RowID 
-            order by APPT_AS_ParRef->AS_Date desc 
-        ) as "cod_recurso_cita",
-        (SELECT TOP 1
-            APPT_AS_ParRef->AS_RES_ParRef->RES_Desc
-            FROM RB_APPOINTMENT 
-            WHERE 
-            APPT_AS_ParRef->AS_Date <= PAADM_DischgDate  
-            and APPT_PAPMI_DR = PAADM_PAPMI_DR
-            and APPT_Adm_DR = PAADM_RowID 
-            order by APPT_AS_ParRef->AS_Date desc 
-        ) as "recurso_cita",
-        (SELECT TOP 1
-            CONVERT (varchar,APPT_AS_ParRef->AS_Date,105)
-            FROM RB_APPOINTMENT 
-            WHERE 
-            APPT_AS_ParRef->AS_Date <= PAADM_DischgDate  
-            and APPT_PAPMI_DR = PAADM_PAPMI_DR    
-            and APPT_Adm_DR = PAADM_RowID 
-            order by APPT_AS_ParRef->AS_Date desc 
-        ) as "fecha_cita",
-        (SELECT TOP 1
-            (CASE
-                WHEN APPT_status = 'P' then 'Agendado'
-                WHEN APPT_status = 'D' then 'Atendido'
-                WHEN APPT_status = 'X' then 'Cancelado'
-                WHEN APPT_status = 'A' then 'Llegó'
-                WHEN APPT_status = 'N' then 'No atendido'
-                WHEN APPT_status = 'T' then 'Transferido'
-                WHEN APPT_status = 'H' then 'En Espera'
-                ELSE APPT_status END)
-            FROM RB_APPOINTMENT 
-            WHERE 
-            APPT_AS_ParRef->AS_Date <= PAADM_DischgDate  
-            and APPT_PAPMI_DR = PAADM_PAPMI_DR    
-            and APPT_Adm_DR = PAADM_RowID 
-            order by APPT_AS_ParRef->AS_Date desc 
-        ) as "estado_cita",
-        CONVERT(VARCHAR,PAADM_PAAdm2_DR->PA_Adm2DischargeSummary->DIS_PADischargeSummary_DR->DIS_Date,105) "fecha_contrarref",
-        PAADM_PAAdm2_DR->PA_Adm2DischargeSummary->DIS_PADischargeSummary_DR->PA_DischargeSummaryRevStat->REVSTAT_ReviewStatus_DR->CLSRS_Desc "etapa_contrarreferencia",
-        PAADM_PAAdm2_DR->PA_Adm2DischargeSummary->DIS_PADischargeSummary_DR->DIS_ModeOfSeparation_DR->CTDSP_Desc  "etapa_alta_amb",
-        PAADM_PAAdm2_DR->PA_Adm2DischargeSummary->DIS_PADischargeSummary_DR->DIS_DischargeDestination_DR->DDEST_Desc "destino_alta",
-        PAADM_WaitList_DR->WL_NO "nro_lista_espera",
-        PAADM_WaitList_DR->WL_RefHosp_DR->CTRFC_Desc "establecimiento_origen",
-        PAADM_WaitList_DR->WL_Hospital_DR->HOSP_Desc "establecimiento_destino",
-        PAADM_PAAdm2_DR->PA_Adm2DischargeSummary->DIS_PADischargeSummary_DR->DIS_PrincipalDiagnosis "diagnostico_cr",
-        PAADM_MAINMRADM_DR->MR_Diagnos->MRDIA_ICDCode_DR->mrcid_desc  "diagnostico",
-        PAADM_MAINMRADM_DR->MR_Diagnos->MRDIA_DiagStat_DR->DSTAT_Desc  "etapa_ges",
-        PAADM_MAINMRADM_DR->MR_Diagnos->MR_DiagType->TYP_MRCDiagTyp->DTYP_Desc "tipo_diagnostico",
-        (case when PAADM_MAINMRADM_DR->MR_Diagnos->MRDIA_Approximate = 'Y' THEN 'Si'
-              when PAADM_MAINMRADM_DR->MRDIA_Approximate = 'N' THEN 'No' end) "diagnostico_principal",
-        PAADM_PAAdm2_DR->PA_Adm2DischargeSummary->DIS_PADischargeSummary_DR->DIS_Procedures "tratamiento_recibido",
-        PAADM_PAAdm2_DR->PA_Adm2DischargeSummary->DIS_PADischargeSummary_DR->DIS_ClinicalOpinion "indicaciones_al_alta",
-        PAADM_PAAdm2_DR->PA_Adm2DischargeSummary->DIS_PADischargeSummary_DR->DIS_CareProv_DR->CTPCP_Desc "nombre_profesional_regitra",
-        PAADM_PAAdm2_DR->PA_Adm2DischargeSummary->DIS_PADischargeSummary_DR->DIS_CareProv_DR->CTPCP_Code "rut_profesional_registra",
-        PAADM_WaitList_DR->WL_CTLOC_DR->CTLOC_DEP_DR->DEP_desc "especialidad_le",
-        PAADM_WaitList_DR->WL_CTLOC_DR->CTLOC_hospital_dr->hosp_Desc "referido_por_el_establecimiento_le",
-        PAADM_PAAdm2_DR->PA_Adm2DischargeSummary->DIS_PADischargeSummary_DR->DIS_TextBox2 "referido_por_el_establecimiento_contrarreferencia",
-        (CASE WHEN PAADM_RefClinTo_DR->CTRFC_Desc IS NULL 
-              THEN PAADM_WaitList_DR->WL_RefHosp_DR->CTRFC_Desc 
-              ELSE PAADM_RefClinTo_DR->CTRFC_Desc END) "referido_al_establecimiento_contrarreferencia",
-        PAADM_RefClinic_DR->CTRFC_Desc "referido_por_alta_amb",
-        PAADM_PAAdm2_DR->PA_Adm2DischargeSummary->DIS_PADischargeSummary_DR->DIS_UpdateUser_DR->SSUSR_Initials "cod_usuario_actualiza",
-        PAADM_PAAdm2_DR->PA_Adm2DischargeSummary->DIS_PADischargeSummary_DR->DIS_UpdateUser_DR->SSUSR_name "usuario_actualiza"
-        FROM PA_ADM
-        WHERE PAADM_HOSPITAL_DR = 10448
-        AND PAADM_AdmDate>='2025-04-23'
-        AND PAADM_RowID > 0
-        AND PAADM_TYPE='O'
-        AND PAADM_Admtime IS NOT NULL
-        AND PAADM_VisitStatus IS NOT NULL
-        AND PAADM_PAAdm2_DR->PA_Adm2DischargeSummary->DIS_PADischargeSummary_DR->PA_DischargeSummaryRevStat->REVSTAT_ReviewStatus_DR in (5,6)
-        AND PAADM_PAAdm2_DR->PA_Adm2DischargeSummary->DIS_PADischargeSummary_DR->DIS_ModeOfSeparation_DR->CTDSP_Desc = 'Contrareferencia'
-        AND PAADM_PAAdm2_DR->PA_Adm2DischargeSummary->DIS_PADischargeSummary_DR->DIS_Date >= '2025-04-23';
+            PAADM_ADMNO "nro_episodio",
+            PAADM_PAPMI_DR->PAPMI_no "nro_registro",
+            (SELECT TOP 1
+                APPT_AS_ParRef->AS_RES_ParRef->RES_CTLOC_DR->CTLOC_desc
+                FROM RB_APPOINTMENT 
+                WHERE 
+                APPT_AS_ParRef->AS_Date <= PAADM_DischgDate  
+                and APPT_PAPMI_DR = PAADM_PAPMI_DR
+                and APPT_Adm_DR = PAADM_RowID 
+                order by APPT_AS_ParRef->AS_Date desc 
+                ) as "local",
+            (SELECT TOP 1
+                APPT_AS_ParRef->AS_RES_ParRef->RES_Code
+                FROM RB_APPOINTMENT 
+                WHERE 
+                APPT_AS_ParRef->AS_Date <= PAADM_DischgDate  
+                and APPT_PAPMI_DR = PAADM_PAPMI_DR
+                and APPT_Adm_DR = PAADM_RowID 
+                order by APPT_AS_ParRef->AS_Date desc 
+                ) as "cod_recurso_cita",
+            (SELECT TOP 1
+                APPT_AS_ParRef->AS_RES_ParRef->RES_Desc
+                FROM RB_APPOINTMENT 
+                WHERE 
+                APPT_AS_ParRef->AS_Date <= PAADM_DischgDate  
+                and APPT_PAPMI_DR = PAADM_PAPMI_DR
+                and APPT_Adm_DR = PAADM_RowID 
+                order by APPT_AS_ParRef->AS_Date desc 
+                ) as "recurso_cita",
+            (SELECT TOP 1
+                CONVERT (varchar,APPT_AS_ParRef->AS_Date,105)
+                FROM RB_APPOINTMENT 
+                WHERE 
+                APPT_AS_ParRef->AS_Date <= PAADM_DischgDate  
+                and APPT_PAPMI_DR = PAADM_PAPMI_DR    
+                and APPT_Adm_DR = PAADM_RowID 
+                order by APPT_AS_ParRef->AS_Date desc 
+                ) as "fecha_cita",
+            (SELECT TOP 1
+                (CASE
+                    WHEN APPT_status = 'P' then 'Agendado'
+                    WHEN APPT_status = 'D' then 'Atendido'
+                    WHEN APPT_status = 'X' then 'Cancelado'
+                    WHEN APPT_status = 'A' then 'Llegó'
+                    WHEN APPT_status = 'N' then 'No atendido'
+                    WHEN APPT_status = 'T' then 'Transferido'
+                    WHEN APPT_status = 'H' then 'En Espera'
+                    ELSE APPT_status end)
+                FROM RB_APPOINTMENT 
+                WHERE 
+                APPT_AS_ParRef->AS_Date <= PAADM_DischgDate  
+                and APPT_PAPMI_DR = PAADM_PAPMI_DR    
+                and APPT_Adm_DR = PAADM_RowID 
+                order by APPT_AS_ParRef->AS_Date desc 
+                ) as "estado_cita",
+            CONVERT(VARCHAR,PAADM_PAAdm2_DR->PA_Adm2DischargeSummary->DIS_PADischargeSummary_DR->DIS_Date,105) "fecha_contrarref",
+            PAADM_PAAdm2_DR->PA_Adm2DischargeSummary->DIS_PADischargeSummary_DR->PA_DischargeSummaryRevStat->REVSTAT_ReviewStatus_DR->CLSRS_Desc "etapa_contrarreferencia",
+            PAADM_PAAdm2_DR->PA_Adm2DischargeSummary->DIS_PADischargeSummary_DR->DIS_ModeOfSeparation_DR->CTDSP_Desc  "etapa_alta_amb",
+            PAADM_PAAdm2_DR->PA_Adm2DischargeSummary->DIS_PADischargeSummary_DR->DIS_DischargeDestination_DR->DDEST_Desc "destino_alta",
+            PAADM_WaitList_DR->WL_NO "nro_lista_espera",
+            PAADM_WaitList_DR->WL_RefHosp_DR->CTRFC_Desc "establecimiento_origen",
+            PAADM_WaitList_DR->WL_Hospital_DR->HOSP_Desc "establecimiento_destino",
+            PAADM_PAAdm2_DR->PA_Adm2DischargeSummary->DIS_PADischargeSummary_DR->DIS_PrincipalDiagnosis "diagnostico_cr",
+            PAADM_MAINMRADM_DR->MR_Diagnos->MRDIA_ICDCode_DR->mrcid_desc  "diagnostico",
+            PAADM_MAINMRADM_DR->MR_Diagnos->MRDIA_DiagStat_DR->DSTAT_Desc  "etapa_ges",
+            PAADM_MAINMRADM_DR->MR_Diagnos->MR_DiagType->TYP_MRCDiagTyp->DTYP_Desc "tipo_diagnostico",
+            (case when PAADM_MAINMRADM_DR->MR_Diagnos->MRDIA_Approximate = 'Y' THEN 'Si'
+            when PAADM_MAINMRADM_DR->MR_Diagnos->MRDIA_Approximate = 'N' THEN 'No' end)"diagnostico_principal",
+            PAADM_PAAdm2_DR->PA_Adm2DischargeSummary->DIS_PADischargeSummary_DR->DIS_Procedures "tratamiento_recibido",
+            PAADM_PAAdm2_DR->PA_Adm2DischargeSummary->DIS_PADischargeSummary_DR->DIS_ClinicalOpinion "indicaciones_al_alta",
+            PAADM_PAAdm2_DR->PA_Adm2DischargeSummary->DIS_PADischargeSummary_DR->DIS_CareProv_DR->CTPCP_Desc "nombre_profesional_regitra",
+            PAADM_PAAdm2_DR->PA_Adm2DischargeSummary->DIS_PADischargeSummary_DR->DIS_CareProv_DR->CTPCP_Code "rut_profesional_registra",
+            PAADM_WaitList_DR->WL_CTLOC_DR->CTLOC_DEP_DR->DEP_desc "especialidad_le",
+            PAADM_WaitList_DR->WL_CTLOC_DR->CTLOC_hospital_dr->hosp_Desc "referido_por_el_establecimiento_le",
+            PAADM_PAAdm2_DR->PA_Adm2DischargeSummary->DIS_PADischargeSummary_DR->DIS_TextBox2 "referido_por_el_establecimiento_contrarreferencia",
+            (CASE WHEN PAADM_RefClinTo_DR->CTRFC_Desc IS NULL THEN PAADM_WaitList_DR->WL_RefHosp_DR->CTRFC_Desc ELSE PAADM_RefClinTo_DR->CTRFC_Desc END) "referido_al_establecimiento_contrarreferencia",
+            PAADM_RefClinic_DR->CTRFC_Desc "referido_por_alta_amb",
+            PAADM_PAAdm2_DR->PA_Adm2DischargeSummary->DIS_PADischargeSummary_DR->DIS_UpdateUser_DR->SSUSR_Initials "cod_usuario_actualiza",
+            PAADM_PAAdm2_DR->PA_Adm2DischargeSummary->DIS_PADischargeSummary_DR->DIS_UpdateUser_DR->SSUSR_name "usuario_actualiza"
+            FROM PA_ADM
+            WHERE PAADM_HOSPITAL_DR = 10448
+            AND PAADM_AdmDate>='2025-04-23'
+            -- AND PAADM_DepCode_DR IN (4070,4994)
+            AND PAADM_RowID > 0
+            AND PAADM_TYPE='O'
+            AND PAADM_ADMDATE IS NOT NULL
+            AND PAADM_ADMTIME IS NOT NULL
+            AND PAADM_VisitStatus IS NOT NULL
+            AND PAADM_PAAdm2_DR->PA_Adm2DischargeSummary->DIS_PADischargeSummary_DR->PA_DischargeSummaryRevStat->REVSTAT_ReviewStatus_DR in (5,6)
+            AND PAADM_PAAdm2_DR->PA_Adm2DischargeSummary->DIS_PADischargeSummary_DR->DIS_ModeOfSeparation_DR->CTDSP_Desc = 'Contrareferencia'
+            AND PAADM_PAAdm2_DR->PA_Adm2DischargeSummary->DIS_PADischargeSummary_DR->DIS_Date >= '2025-04-23';
     '''
 
     cursor_iris = conn_iris.cursor()
