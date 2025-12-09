@@ -38,7 +38,6 @@ mysql_password = os.getenv('DB_MYSQL_PASSWORD')
 mysql_database = os.getenv('DB_MYSQL_DATABASE')
 
 def fail_and_exit(message):
-    """ Registrar error real y terminar con exit code 1 para n8n """
     logging.error(message)
     sys.exit(1)
 
@@ -48,15 +47,76 @@ def encrypt_parity_check(message):
     fernet = Fernet(key)
     return fernet.encrypt(message.encode())
 
+
+# ============================================================
+# FUNCIÓN NUEVA → CREA TABLA SI NO EXISTE
+# ============================================================
+
+def create_table_if_not_exists(cursor, conn):
+    cursor.execute("""
+        SELECT COUNT(*)
+        FROM information_schema.tables
+        WHERE table_schema = %s
+        AND table_name = 'z_usabilidad_hospitalizados_epicrisis';
+    """, (mysql_database,))
+
+    exists = cursor.fetchone()[0]
+
+    if exists:
+        logging.info("La tabla ya existe. No es necesario crearla.")
+        return
+
+    logging.info("La tabla NO existe. Creándola con tamaños optimizados...")
+
+    create_sql = """
+    CREATE TABLE `z_usabilidad_hospitalizados_epicrisis` (
+      `HOSP_Code` varchar(6) DEFAULT NULL,
+      `NombrePaciente` varchar(60) DEFAULT NULL,
+      `RUNPaciente` varchar(10) DEFAULT NULL,
+      `SexoCodigo` varchar(1) DEFAULT NULL,
+      `Sexo` varchar(23) DEFAULT NULL,
+      `Comuna` varchar(20) DEFAULT NULL,
+      `EstablecimientoInscripcion` varchar(86) DEFAULT NULL,
+      `ServicioClinicoCodigo` varchar(27) DEFAULT NULL,
+      `ServicioClinico` varchar(36) DEFAULT NULL,
+      `FechaAtencion` varchar(10) DEFAULT NULL,
+      `FechaEgreso` varchar(10) DEFAULT NULL,
+      `FechaAlta` varchar(10) DEFAULT NULL,
+      `DestinoEgreso` varchar(49) DEFAULT NULL,
+      `NumeroEpisodio` varchar(11) DEFAULT NULL,
+      `MedicoContacto` varchar(44) DEFAULT NULL,
+      `Hosp` varchar(45) DEFAULT NULL,
+      `subtipoepi` varchar(43) DEFAULT NULL,
+      `TratamientoRecibido` TEXT,
+      `ProximoControl` varchar(29) DEFAULT NULL,
+      `IndicacionesAlAlta` TEXT,
+      `DiagnosticoQueMotivoIngreso` TEXT,
+      `local_actual` varchar(36) DEFAULT NULL,
+      `estado_epicrisis` varchar(1) DEFAULT NULL,
+      `descripcion_estado_epicrisis` varchar(13) DEFAULT NULL,
+      `usuario_update_epicrisis` varchar(44) DEFAULT NULL,
+      `HoraAtencion` varchar(10) DEFAULT NULL,
+      `HoraEgreso` varchar(10) DEFAULT NULL,
+      `fechaActualizacion` datetime DEFAULT NULL
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3;
+    """
+
+    cursor.execute(create_sql)
+    conn.commit()
+    logging.info("Tabla creada exitosamente.")
+
+
+# ============================================================
+# SCRIPT PRINCIPAL
+# ============================================================
+
 conn_mysql = None
 conn_iris = None
 cursor_iris = None
 cursor_mysql = None
 
 try:
-    # ============================================================
-    # VALIDACIONES DE VARIABLES DE ENTORNO
-    # ============================================================
+    # VALIDACIONES
     if not jdbc_driver_name or not jdbc_driver_loc:
         fail_and_exit("JDBC_DRIVER_NAME o JDBC_DRIVER_PATH no configurados.")
 
@@ -66,30 +126,22 @@ try:
     if not mysql_host or not mysql_port or not mysql_user or not mysql_password or not mysql_database:
         fail_and_exit("Variables MySQL no configuradas correctamente.")
 
-    # ============================================================
     # INICIAR JVM
-    # ============================================================
     if not jpype.isJVMStarted():
         jpype.startJVM(jpype.getDefaultJVMPath(), "-Djava.class.path=" + jdbc_driver_loc)
 
-    # ============================================================
     # CONEXIÓN A IRIS
-    # ============================================================
     logging.info("Conectando a InterSystems IRIS...")
+    conn_iris = jaydebeapi.connect(
+        jdbc_driver_name,
+        iris_connection_string,
+        {'user': iris_user, 'password': iris_password},
+        jdbc_driver_loc
+    )
 
-    try:
-        conn_iris = jaydebeapi.connect(
-            jdbc_driver_name,
-            iris_connection_string,
-            {'user': iris_user, 'password': iris_password},
-            jdbc_driver_loc
-        )
-    except Exception as e:
-        fail_and_exit(f"Error conectando a IRIS: {e}")
+    cursor_iris = conn_iris.cursor()
 
-    # ============================================================
-    # CONSULTA A IRIS
-    # ============================================================
+    # CONSULTA IRIS
     query = """ 
         select %nolock PAADM_DepCode_DR->CTLOC_Hospital_DR->HOSP_Code as HOSP_Code,
         isnull(PAADM_PAPMI_DR->PAPMI_Name,'') ||', '|| isnull(PAADM_PAPMI_DR->PAPMI_Name3,'') ||', '|| isnull(PAADM_PAPMI_DR->PAPMI_Name2,'') as NombrePaciente,
@@ -112,11 +164,10 @@ try:
         DIS_PrincipalDiagnosis as DiagnosticoQueMotivoIngreso,
         PAADM_CurrentWard_DR->WARD_Desc AS "local_actual",
         PA_DischargeSummary.DIS_Status as "estado_epicrisis",
-        (CASE  
-            WHEN PA_DischargeSummary.DIS_Status = 'A' THEN 'Autorizado'
-            WHEN PA_DischargeSummary.DIS_Status = 'E' THEN 'En Progreso'
-            WHEN PA_DischargeSummary.DIS_Status is null THEN 'Sin Epicrisis'
-            ELSE 'Otro'
+        (CASE WHEN PA_DischargeSummary.DIS_Status = 'A' THEN 'Autorizado'
+              WHEN PA_DischargeSummary.DIS_Status = 'E' THEN 'En Progreso'
+              WHEN PA_DischargeSummary.DIS_Status is null THEN 'Sin Epicrisis'
+              ELSE 'Otro'
         END) AS "descripcion_estado_epicrisis",
         SSUSR_Name as "usuario_update_epicrisis",
         convert( varchar, PAADM_AdmTime, 108 ) as HoraAtencion,
@@ -134,45 +185,34 @@ try:
         AND PAADM_Type = 'I';
     """
 
-    cursor_iris = conn_iris.cursor()
+    cursor_iris.execute(query)
+    rows = cursor_iris.fetchall()
 
-    try:
-        cursor_iris.execute(query)
-        rows = cursor_iris.fetchall()
-    except Exception as e:
-        fail_and_exit(f"Error ejecutando consulta IRIS: {e}")
+    formatted_rows = [
+        tuple('' if r is None else str(r) for r in row) 
+        + (datetime.now().strftime('%Y-%m-%d %H:%M:%S'),)
+        for row in rows
+    ]
 
-    # Formatear filas
-    formatted_rows = []
-    for row in rows:
-        formatted_rows.append(tuple(
-            '' if r is None else str(r) for r in row
-        ) + (datetime.now().strftime('%Y-%m-%d %H:%M:%S'),))
-
-    # ============================================================
     # CONEXIÓN A MYSQL
-    # ============================================================
     logging.info("Conectando a MySQL...")
-
-    try:
-        conn_mysql = mysql.connector.connect(
-            host=mysql_host,
-            port=mysql_port,
-            user=mysql_user,
-            password=mysql_password,
-            database=mysql_database
-        )
-    except Exception as e:
-        fail_and_exit(f"Error conectando a MySQL: {e}")
-
+    conn_mysql = mysql.connector.connect(
+        host=mysql_host,
+        port=mysql_port,
+        user=mysql_user,
+        password=mysql_password,
+        database=mysql_database
+    )
     cursor_mysql = conn_mysql.cursor()
 
+    # ================================
+    # CREAR TABLA SI NO EXISTE
+    # ================================
+    create_table_if_not_exists(cursor_mysql, conn_mysql)
+
     # TRUNCATE
-    try:
-        cursor_mysql.execute("TRUNCATE TABLE z_usabilidad_hospitalizados_epicrisis")
-        conn_mysql.commit()
-    except Exception as e:
-        fail_and_exit(f"Error al truncar MySQL: {e}")
+    cursor_mysql.execute("TRUNCATE TABLE z_usabilidad_hospitalizados_epicrisis")
+    conn_mysql.commit()
 
     # INSERT
     insert_query = """
@@ -190,28 +230,20 @@ try:
         );
     """
 
-    try:
-        for i in range(0, len(formatted_rows), 1000):
-            chunk = formatted_rows[i:i+1000]
-            cursor_mysql.executemany(insert_query, chunk)
-            conn_mysql.commit()
-    except Exception as e:
-        fail_and_exit(f"Error insertando datos en MySQL: {e}")
+    for i in range(0, len(formatted_rows), 1000):
+        chunk = formatted_rows[i:i+1000]
+        cursor_mysql.executemany(insert_query, chunk)
+        conn_mysql.commit()
 
     logging.info("Datos transferidos exitosamente.")
     sys.exit(0)
-    
+
 except Exception as e:
     fail_and_exit(f"Error inesperado: {e}")
 
 finally:
-    if cursor_iris:
-        cursor_iris.close()
-    if conn_iris:
-        conn_iris.close()
-    if cursor_mysql:
-        cursor_mysql.close()
-    if conn_mysql:
-        conn_mysql.close()
-    if jpype.isJVMStarted():
-        jpype.shutdownJVM()
+    if cursor_iris: cursor_iris.close()
+    if conn_iris: conn_iris.close()
+    if cursor_mysql: cursor_mysql.close()
+    if conn_mysql: conn_mysql.close()
+    if jpype.isJVMStarted(): jpype.shutdownJVM()
