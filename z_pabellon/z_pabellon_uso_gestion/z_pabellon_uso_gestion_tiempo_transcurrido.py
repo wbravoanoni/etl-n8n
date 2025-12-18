@@ -1,4 +1,4 @@
-import os 
+import os
 import pandas as pd
 import mysql.connector
 from datetime import datetime
@@ -19,7 +19,34 @@ mysql_user = os.getenv('DB_MYSQL_USER')
 mysql_password = os.getenv('DB_MYSQL_PASSWORD')
 mysql_database = os.getenv('DB_MYSQL_DATABASE')
 
+# ============================================================
+# FUNCIÓN: crear tabla si no existe
+# ============================================================
+def crear_tabla_z_pabellon_uso_gestion_tiempo_transcurrido(cursor):
+    cursor.execute("""
+    CREATE TABLE IF NOT EXISTS z_pabellon_uso_gestion_tiempo_transcurrido (
+        episodio VARCHAR(11),
+        fecha_cirugia VARCHAR(10),
+        fecha_ingreso_quirofano VARCHAR(10),
+        hora_ingreso_quirofano VARCHAR(8),
+        fecha_egreso_quirofano VARCHAR(10),
+        hora_egreso_quirofano VARCHAR(8),
+        pabellon VARCHAR(15),
+        hora_ingreso_siguiente VARCHAR(8),
+        es_ultima_cirugia_del_dia VARCHAR(20),
+        tipo_cirugia VARCHAR(30),
+        estado_cirugia VARCHAR(12),
+        fechaActualizacion VARCHAR(19),
+
+        INDEX idx_episodio (episodio),
+        INDEX idx_fecha_cirugia (fecha_cirugia),
+        INDEX idx_pabellon (pabellon)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+    """)
+
+# ============================================================
 # Conectar a MySQL
+# ============================================================
 try:
     conn = mysql.connector.connect(
         host=mysql_host,
@@ -29,19 +56,27 @@ try:
         database=mysql_database
     )
     cursor = conn.cursor()
-    logging.info(" Conexión a MySQL exitosa")
+    logging.info("Conexión a MySQL exitosa")
 except mysql.connector.Error as err:
-    logging.error(f" Error de conexión a MySQL: {err}")
+    logging.error(f"Error de conexión a MySQL: {err}")
     exit(1)
 
+# ============================================================
+# CREAR TABLA SI NO EXISTE
+# ============================================================
+crear_tabla_z_pabellon_uso_gestion_tiempo_transcurrido(cursor)
+conn.commit()
+logging.info("Tabla z_pabellon_uso_gestion_tiempo_transcurrido verificada/creada")
+
+# ============================================================
 # Consulta de origen
+# ============================================================
 query = """
     SELECT * FROM z_pabellon_uso_gestion_pabellones_estado_agendamiento
 """
-
 df = pd.read_sql(query, conn)
 
-# Columnas objetivo incluyendo las nuevas
+# Columnas objetivo
 columnas_objetivo = [
     'episodio',
     'fecha_cirugia',
@@ -54,20 +89,20 @@ columnas_objetivo = [
     'estado_cirugia'
 ]
 
-# Subset del DataFrame
 df = df[columnas_objetivo]
 
-# Convertir fecha_cirugia a YYYY-MM-DD
+# ============================================================
+# Transformaciones (SIN CAMBIOS)
+# ============================================================
 df['fecha_cirugia'] = pd.to_datetime(df['fecha_cirugia'], dayfirst=True, errors='coerce').dt.date
 
-# Convertir fechas que pueden venir vacías
 for col in ['fecha_ingreso_quirofano', 'fecha_egreso_quirofano']:
     df[col] = pd.to_datetime(df[col], errors='coerce').dt.date
 
-# Convertir hora_ingreso_quirofano para cálculo posterior
-df['hora_ingreso_quirofano_dt'] = pd.to_datetime(df['hora_ingreso_quirofano'], format='%H:%M:%S', errors='coerce')
+df['hora_ingreso_quirofano_dt'] = pd.to_datetime(
+    df['hora_ingreso_quirofano'], format='%H:%M:%S', errors='coerce'
+)
 
-# Calcular hora_ingreso_siguiente
 df['hora_ingreso_siguiente'] = None
 
 for i, row in df.iterrows():
@@ -83,60 +118,47 @@ for i, row in df.iterrows():
     if not posteriores.empty:
         siguiente = posteriores.sort_values(by='hora_ingreso_quirofano_dt').iloc[0]
         hora_siguiente = siguiente['hora_ingreso_quirofano']
-
         hora_egreso = row['hora_egreso_quirofano']
 
-        # Validar que la hora siguiente sea posterior a la hora de egreso (si ambas existen)
         if pd.notnull(hora_egreso) and pd.notnull(hora_siguiente):
             try:
                 egreso_dt = datetime.strptime(hora_egreso, "%H:%M:%S")
                 ingreso_sig_dt = datetime.strptime(hora_siguiente, "%H:%M:%S")
-
                 if ingreso_sig_dt > egreso_dt:
                     df.at[i, 'hora_ingreso_siguiente'] = hora_siguiente
             except Exception as e:
-                logging.warning(f" Error al validar hora siguiente en episodio {row['episodio']}: {e}")
+                logging.warning(f"Error al validar hora siguiente en episodio {row['episodio']}: {e}")
         else:
-            # Si no hay hora de egreso, se permite igual
             df.at[i, 'hora_ingreso_siguiente'] = hora_siguiente
 
-# Eliminar columna auxiliar
 df.drop(columns=['hora_ingreso_quirofano_dt'], inplace=True)
 
-# Agregar la nueva columna a las columnas finales
 columnas_finales = columnas_objetivo + ['hora_ingreso_siguiente']
 df = df[columnas_finales]
 
-# Reemplazar NaN o NaT por None
 df = df.where(pd.notnull(df), None)
 
-# Truncar tabla destino
-try:
-    cursor.execute("TRUNCATE TABLE z_pabellon_uso_gestion_tiempo_transcurrido")
-    conn.commit()
-    logging.info(" Tabla truncada: z_pabellon_uso_gestion_tiempo_transcurrido")
-except Exception as e:
-    logging.error(f" Error al truncar la tabla: {e}")
-    conn.close()
-    exit(1)
+# ============================================================
+# TRUNCATE
+# ============================================================
+cursor.execute("TRUNCATE TABLE z_pabellon_uso_gestion_tiempo_transcurrido")
+conn.commit()
+logging.info("Tabla truncada: z_pabellon_uso_gestion_tiempo_transcurrido")
 
-# Insertar en tabla destino
+# ============================================================
+# INSERT
+# ============================================================
 insert_query = """
-    INSERT INTO z_pabellon_uso_gestion_tiempo_transcurrido 
+    INSERT INTO z_pabellon_uso_gestion_tiempo_transcurrido
     (episodio, fecha_cirugia, fecha_ingreso_quirofano, hora_ingreso_quirofano,
      fecha_egreso_quirofano, hora_egreso_quirofano, pabellon,
      tipo_cirugia, estado_cirugia, hora_ingreso_siguiente)
     VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
 """
 
-valores = df.values.tolist()
+cursor.executemany(insert_query, df.values.tolist())
+conn.commit()
+logging.info(f"{cursor.rowcount} registros insertados correctamente.")
 
-try:
-    cursor.executemany(insert_query, valores)
-    conn.commit()
-    logging.info(f" {cursor.rowcount} registros insertados correctamente.")
-except mysql.connector.Error as err:
-    logging.error(f" Error al insertar datos: {err}")
-finally:
-    cursor.close()
-    conn.close()
+cursor.close()
+conn.close()
