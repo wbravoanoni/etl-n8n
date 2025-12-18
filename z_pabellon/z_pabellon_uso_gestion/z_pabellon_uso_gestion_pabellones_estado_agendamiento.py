@@ -15,7 +15,7 @@ os.makedirs("logs", exist_ok=True)
 # Configurar logging para que también imprima en la consola
 logging.basicConfig(level=logging.INFO, 
                     format='%(asctime)s - %(threadName)s - %(processName)s %(levelname)s - %(message)s',
-                    handlers=[logging.FileHandler("logs/z_pabellon_prueba_concepto_tisne.log"),
+                    handlers=[logging.FileHandler("logs/z_pabellon_uso_gestion_pabellones_estado_agendamiento.log"),
                         logging.StreamHandler()])
 
 # Cargar variables de entorno desde el archivo .env
