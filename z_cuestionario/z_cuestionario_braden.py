@@ -18,7 +18,7 @@ logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s - %(threadName)s - %(processName)s %(levelname)s - %(message)s',
     handlers=[
-        logging.FileHandler("logs/z_carga_consultas_urgencias.log"),
+        logging.FileHandler("logs/z_carga_z_cuestionario_braden.log"),
         logging.StreamHandler()
     ]
 )
