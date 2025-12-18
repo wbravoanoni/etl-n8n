@@ -76,11 +76,18 @@ SELECT %NOLOCK
     RBOP.RBOP_PAADM_DR->PAADM_ADMNO AS episodio,
     TO_CHAR(RBOP.RBOP_DateOper, 'DD-MM-YYYY') AS fecha_cirugia,
     CASE RBOP.RBOP_Status
+        WHEN 'B'  THEN 'AGENDADO'
+        WHEN 'CL'  THEN 'CERRADO'
+        WHEN 'C'  THEN 'CONFIRMADO'
+        WHEN 'SF'  THEN 'ENVIADO POR'
+        WHEN 'SK'  THEN 'ENVIADO POR RECONOCIDO'
+        WHEN 'N'  THEN 'NO LISTO'
+        WHEN 'P'  THEN 'POSTERGADO'
         WHEN 'D'  THEN 'REALIZADO'
-        WHEN 'X'  THEN 'SUSPENDIDO'
         WHEN 'A'  THEN 'RECEPCIONADO'
         WHEN 'DP' THEN 'SALIDA'
         WHEN 'R'  THEN 'SOLICITADO'
+        WHEN 'X'  THEN 'SUSPENDIDO'
         ELSE 'OTRO'
     END AS estado_cirugia,
     CASE RBOP.RBOP_BookingType
