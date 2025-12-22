@@ -1,3 +1,7 @@
 # Se debe compartir el archivo con la cuenta:
 
 exportador-iris-sheets@integracion-iris-sheets.iam.gserviceaccount.com
+
+Ubicacion de los archivos:
+
+Mi unidad -> Pagina DTD -> Recursos -> Extracción de datos actualizado (propio)
