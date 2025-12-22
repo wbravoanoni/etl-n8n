@@ -104,6 +104,7 @@ try:
 PAADM_PAPMI_DR->PAPMI_PAPER_DR->PAPER_NAME2  || ' ' ||
 PAADM_PAPMI_DR->PAPMI_PAPER_DR->PAPER_NAME || ' ' ||
 PAADM_PAPMI_DR->PAPMI_PAPER_DR->PAPER_NAME3 AS "paciente",
+DATEDIFF(YEAR,PAADM_PAPMI_DR->PAPMI_PAPER_DR->PAPER_Dob, GETDATE()) AS Edad,
 QUESCreateDate AS "fecha creacion",
 QUESCreateTime AS "hora creacion",
 b.SSUSR_Name AS "usuario creador",
