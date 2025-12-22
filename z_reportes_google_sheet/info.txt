@@ -1,0 +1,3 @@
+# Se debe compartir el archivo con la cuenta:
+
+exportador-iris-sheets@integracion-iris-sheets.iam.gserviceaccount.com
