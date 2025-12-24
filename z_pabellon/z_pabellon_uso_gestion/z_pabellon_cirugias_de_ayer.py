@@ -176,7 +176,7 @@ try:
             END
         FROM RB_OperatingRoom
         WHERE RBOP_PAADM_DR->PAADM_Hospital_DR = '10448'
-          AND RB_OperatingRoom.RBOP_DateOper = CURRENT_DATE - 1
+          AND RB_OperatingRoom.RBOP_DateOper = CURRENT_DATE
         ORDER BY RBOP_Resource_DR->RES_Desc
     """
 
