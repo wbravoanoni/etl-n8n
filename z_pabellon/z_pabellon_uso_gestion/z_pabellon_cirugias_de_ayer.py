@@ -1,4 +1,7 @@
-# Cirugías del día anterior acumuladas
+# ============================================================
+# Cirugías del día – Cron 23:00
+# Fecha clínica (IRIS) + Fecha ejecución real (Sistema)
+# ============================================================
 
 import jaydebeapi
 import jpype
@@ -7,6 +10,12 @@ from dotenv import load_dotenv
 import os
 import logging
 from datetime import datetime
+import smtplib
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
+from email.mime.application import MIMEApplication
+from pathlib import Path
+import pandas as pd
 
 # ============================================================
 # CARGA DE ENTORNO Y LOGS
@@ -17,9 +26,9 @@ os.makedirs("logs", exist_ok=True)
 
 logging.basicConfig(
     level=logging.INFO,
-    format='%(asctime)s - %(threadName)s - %(processName)s %(levelname)s - %(message)s',
+    format="%(asctime)s - %(levelname)s - %(message)s",
     handlers=[
-        logging.FileHandler("logs/z_pabellon_cirugias_de_ayer.log"),
+        logging.FileHandler("logs/z_pabellon_cirugias.log"),
         logging.StreamHandler()
     ]
 )
@@ -28,26 +37,82 @@ logging.basicConfig(
 # VARIABLES DE ENTORNO
 # ============================================================
 
-jdbc_driver_name = os.getenv('JDBC_DRIVER_NAME')
-jdbc_driver_loc = os.getenv('JDBC_DRIVER_PATH')
-iris_connection_string = os.getenv('CONEXION_STRING')
-iris_user = os.getenv('DB_USER')
-iris_password = os.getenv('DB_PASSWORD')
+# IRIS
+jdbc_driver_name = os.getenv("JDBC_DRIVER_NAME")
+jdbc_driver_loc = os.getenv("JDBC_DRIVER_PATH")
+iris_connection_string = os.getenv("CONEXION_STRING")
+iris_user = os.getenv("DB_USER")
+iris_password = os.getenv("DB_PASSWORD")
 
-mysql_host = os.getenv('DB_MYSQL_HOST')
-mysql_port = int(os.getenv('DB_MYSQL_PORT', 3306))
-mysql_user = os.getenv('DB_MYSQL_USER')
-mysql_password = os.getenv('DB_MYSQL_PASSWORD')
-mysql_database = os.getenv('DB_MYSQL_DATABASE')
+# MySQL
+mysql_host = os.getenv("DB_MYSQL_HOST")
+mysql_port = int(os.getenv("DB_MYSQL_PORT", 3306))
+mysql_user = os.getenv("DB_MYSQL_USER")
+mysql_password = os.getenv("DB_MYSQL_PASSWORD")
+mysql_database = os.getenv("DB_MYSQL_DATABASE")
+
+# Email
+EMAIL_USER  = os.getenv("SMTP_USER")
+EMAIL_PASS  = os.getenv("SMTP_PASSWORD")
+EMAIL_TO    = os.getenv("RECIPIENT_EMAILS_REGISTROPABELLON")
+EMAIL_ALERT = os.getenv("RECIPIENT_EMAILS_REGISTROPABELLON_ERROR")
+EMAIL_HOST  = os.getenv("SMTP_HOST")
+EMAIL_PORT  = int(os.getenv("SMTP_PORT"))
 
 # ============================================================
-# FUNCIÓN: CREAR TABLA SI NO EXISTE (CON fechaActualizacion)
+# FUNCIÓN: ENVÍO DE CORREO (con adjunto)
+# ============================================================
+
+def enviar_correo(asunto, cuerpo, es_error=False, adjunto_path=None):
+    destinatarios = EMAIL_ALERT if es_error else EMAIL_TO
+
+    if not destinatarios:
+        logging.warning("No hay destinatarios configurados para correo")
+        return
+
+    try:
+        msg = MIMEMultipart()
+        msg["Subject"] = asunto
+        msg["From"] = EMAIL_USER
+        msg["To"] = destinatarios
+
+        msg.attach(MIMEText(cuerpo, "plain", "utf-8"))
+
+        if adjunto_path and Path(adjunto_path).exists():
+            with open(adjunto_path, "rb") as f:
+                adjunto = MIMEApplication(
+                    f.read(),
+                    _subtype="vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+                )
+                adjunto.add_header(
+                    "Content-Disposition",
+                    "attachment",
+                    filename=Path(adjunto_path).name
+                )
+                msg.attach(adjunto)
+
+        with smtplib.SMTP(EMAIL_HOST, EMAIL_PORT) as server:
+            server.starttls()
+            server.login(EMAIL_USER, EMAIL_PASS)
+            server.sendmail(
+                EMAIL_USER,
+                [d.strip() for d in destinatarios.split(",")],
+                msg.as_string()
+            )
+
+        logging.info("Correo enviado correctamente")
+
+    except Exception as e:
+        logging.error(f"Error enviando correo: {e}", exc_info=True)
+
+# ============================================================
+# FUNCIÓN: CREAR TABLA
 # ============================================================
 
 def crear_tabla_si_no_existe(cursor):
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS z_pabellon_cirugias_de_ayer (
-            id BIGINT AUTO_INCREMENT PRIMARY KEY,       
+            id BIGINT AUTO_INCREMENT PRIMARY KEY,
             IDTRAK VARCHAR(255),
             Establecimiento VARCHAR(255),
             Episodio VARCHAR(255),
@@ -60,45 +125,45 @@ def crear_tabla_si_no_existe(cursor):
             RUT VARCHAR(255),
             Codigo_Cirugia VARCHAR(255),
             Descripcion_Cirugia VARCHAR(255),
-            Tipo_Cirugia VARCHAR(255),
             Diagnostico VARCHAR(255),
-            Tiempo_Estimado VARCHAR(255),
-            Lista_Espera VARCHAR(255),
-            Suspension VARCHAR(255),
-            Area VARCHAR(255),
-            Pabellon VARCHAR(255),
             Fecha VARCHAR(255),
             Hora VARCHAR(255),
             Cirujano VARCHAR(255),
             Especialidad VARCHAR(255),
-            Cirugia_Ambulatoria VARCHAR(255),
-            Cirugia_Condicional VARCHAR(255),
-            GES VARCHAR(255),
             Estado VARCHAR(255),
             fechaActualizacion DATETIME
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3;
     """)
 
 # ============================================================
+# FUNCIÓN: GENERAR EXCEL
+# ============================================================
+
+def generar_excel_registros(datos, columnas, fecha_proceso):
+    if not datos:
+        return None
+
+    df = pd.DataFrame(datos, columns=columnas)
+
+    nombre_archivo = f"cirugias_pabellon_{fecha_proceso}.xlsx"
+    ruta = Path("logs") / nombre_archivo
+
+    df.to_excel(ruta, index=False, engine="openpyxl")
+    return ruta
+
+# ============================================================
 # MAIN
 # ============================================================
 
-conn_mysql = None
 conn_iris = None
-cursor_iris = None
-cursor_mysql = None
+conn_mysql = None
+ruta_excel = None
+fecha_proceso = None
+
+# Fecha real de ejecución (UNA sola vez)
+fecha_ejecucion_real = datetime.now()
 
 try:
-    # --------------------------------------------------------
-    # VALIDACIONES
-    # --------------------------------------------------------
-    if not jdbc_driver_name or not jdbc_driver_loc:
-        raise ValueError("JDBC no configurado")
-    if not iris_connection_string or not iris_user or not iris_password:
-        raise ValueError("IRIS no configurado")
-    if not mysql_host or not mysql_user or not mysql_password or not mysql_database:
-        raise ValueError("MySQL no configurado")
-
     # --------------------------------------------------------
     # INICIAR JVM
     # --------------------------------------------------------
@@ -114,17 +179,17 @@ try:
     conn_iris = jaydebeapi.connect(
         jdbc_driver_name,
         iris_connection_string,
-        {'user': iris_user, 'password': iris_password},
+        {"user": iris_user, "password": iris_password},
         jdbc_driver_loc
     )
     cursor_iris = conn_iris.cursor()
 
     # --------------------------------------------------------
-    # QUERY IRIS
+    # QUERY IRIS (día clínico)
     # --------------------------------------------------------
     query = """
         SELECT
-            String(RB_OperatingRoom.RBOP_RowId),
+            String(RBOP_RowId),
             RBOP_PAADM_DR->PAADM_Hospital_DR->HOSP_Desc,
             RBOP_PAADM_DR->PAADM_ADMNo,
             CASE RBOP_PAADM_DR->PAADM_Type
@@ -140,45 +205,26 @@ try:
             RBOP_PAADM_DR->PAADM_PAPMI_DR->PAPMI_Name3 || ' ' ||
             RBOP_PAADM_DR->PAADM_PAPMI_DR->PAPMI_Name,
             RBOP_PAADM_DR->PAADM_PAPMI_DR->PAPMI_ID,
-            RB_OperatingRoom.RBOP_Operation_DR->OPER_Code,
-            RB_OperatingRoom.RBOP_Operation_DR->OPER_Desc,
-            CASE RBOP_BookingType
-                WHEN 'EL'  THEN 'Cirugía Electiva'
-                WHEN 'ENP' THEN 'Cirugía Electiva No Programada'
-                WHEN 'EM'  THEN 'Cirugía Urgencia'
-            END,
+            RBOP_Operation_DR->OPER_Code,
+            RBOP_Operation_DR->OPER_Desc,
             RBOP_PreopDiagn_DR->MRCID_Desc,
-            RBOP_EstimatedTime,
-            RBOP_WaitLIST_DR->WL_NO,
-            RBOP_ReasonSuspend_DR->SUSP_Desc,
-            RBOP_Resource_DR->RES_CTLOC_DR->CTLOC_DESC,
-            RBOP_Resource_DR->RES_Desc,
-            CONVERT(VARCHAR, RB_OperatingRoom.RBOP_DateOper, 105),
-            %EXTERNAL(RB_OperatingRoom.RBOP_TimeOper),
+            CONVERT(VARCHAR, RBOP_DateOper, 105),
+            %EXTERNAL(RBOP_TimeOper),
             RBOP_Surgeon_DR->CTPCP_Desc,
             RBOP_OperDepartment_DR->CTLOC_Desc,
-            RBOP_DaySurgery,
-            RBOP_PreopTestDone,
-            RBOP_YesNo3,
             CASE RBOP_Status
-                WHEN 'B'  THEN 'AGENDADO'
-                WHEN 'N'  THEN 'NO LISTO'
-                WHEN 'P'  THEN 'POSTERGADO'
-                WHEN 'D'  THEN 'REALIZADO'
-                WHEN 'A'  THEN 'RECEPCIONADO'
-                WHEN 'R'  THEN 'SOLICITADO'
-                WHEN 'X'  THEN 'SUSPENDIDO'
-                WHEN 'DP' THEN 'SALIDA'
-                WHEN 'CL' THEN 'CERRADO'
-                WHEN 'C'  THEN 'CONFIRMADO'
-                WHEN 'SF' THEN 'ENVIADO POR'
-                WHEN 'SK' THEN 'ENVIADO POR RECONOCIDO'
-            END
+                WHEN 'D' THEN 'REALIZADO'
+                WHEN 'A' THEN 'RECEPCIONADO'
+                WHEN 'B' THEN 'AGENDADO'
+                WHEN 'X' THEN 'SUSPENDIDO'
+                ELSE 'OTRO'
+            END,
+            CURRENT_DATE
         FROM RB_OperatingRoom
-        WHERE RBOP_PAADM_DR->PAADM_Hospital_DR = '10448'
-        AND RB_OperatingRoom.RBOP_DateOper >= CURRENT_DATE
-        AND RB_OperatingRoom.RBOP_DateOper < DATEADD('day', 1, CURRENT_DATE)
-        ORDER BY RBOP_Resource_DR->RES_Desc
+        WHERE
+            RBOP_PAADM_DR->PAADM_Hospital_DR = '10448'
+            AND RBOP_DateOper >= CURRENT_DATE
+            AND RBOP_DateOper < DATEADD('day', 1, CURRENT_DATE)
     """
 
     cursor_iris.execute(query)
@@ -188,9 +234,35 @@ try:
     # FORMATEO
     # --------------------------------------------------------
     formatted_rows = []
+
     for row in rows:
-        valores = [str(col) if col is not None else '' for col in row]
-        formatted_rows.append(tuple(valores + [datetime.now()]))
+        *datos, fecha_proceso_raw = row
+
+        fecha_proceso = datetime.strptime(
+            str(fecha_proceso_raw), "%Y-%m-%d"
+        ).date()
+
+        formatted_rows.append(
+            tuple(map(str, datos)) + (fecha_ejecucion_real,)
+        )
+
+    # --------------------------------------------------------
+    # GENERAR EXCEL
+    # --------------------------------------------------------
+    columnas_excel = [
+        "IDTRAK", "Establecimiento", "Episodio", "Tipo_Episodio",
+        "Numero_Registro", "Apellido_Paterno", "Apellido_Materno",
+        "Nombre", "Paciente", "RUT",
+        "Codigo_Cirugia", "Descripcion_Cirugia", "Diagnostico",
+        "Fecha", "Hora", "Cirujano", "Especialidad", "Estado",
+        "fechaActualizacion"
+    ]
+
+    ruta_excel = generar_excel_registros(
+        formatted_rows,
+        columnas_excel,
+        fecha_proceso
+    )
 
     # --------------------------------------------------------
     # MYSQL
@@ -205,42 +277,54 @@ try:
     cursor_mysql = conn_mysql.cursor()
 
     crear_tabla_si_no_existe(cursor_mysql)
-    conn_mysql.commit()
 
     insert_query = """
         INSERT INTO z_pabellon_cirugias_de_ayer (
             IDTRAK, Establecimiento, Episodio, Tipo_Episodio, Numero_Registro,
             Apellido_Paterno, Apellido_Materno, Nombre, Paciente, RUT,
-            Codigo_Cirugia, Descripcion_Cirugia, Tipo_Cirugia, Diagnostico,
-            Tiempo_Estimado, Lista_Espera, Suspension, Area, Pabellon,
-            Fecha, Hora, Cirujano, Especialidad, Cirugia_Ambulatoria,
-            Cirugia_Condicional, GES, Estado, fechaActualizacion
+            Codigo_Cirugia, Descripcion_Cirugia, Diagnostico,
+            Fecha, Hora, Cirujano, Especialidad, Estado, fechaActualizacion
         ) VALUES (
-            %s, %s, %s, %s, %s,
-            %s, %s, %s, %s, %s,
-            %s, %s, %s, %s, %s,
-            %s, %s, %s, %s, %s,
-            %s, %s, %s, %s, %s,
-            %s, %s, %s
+            %s,%s,%s,%s,%s,
+            %s,%s,%s,%s,%s,
+            %s,%s,%s,
+            %s,%s,%s,%s,%s,%s
         )
     """
 
-    for i in range(0, len(formatted_rows), 1000):
-        cursor_mysql.executemany(insert_query, formatted_rows[i:i + 1000])
-        conn_mysql.commit()
+    cursor_mysql.executemany(insert_query, formatted_rows)
+    conn_mysql.commit()
 
-    logging.info("Datos transferidos exitosamente.")
+    # --------------------------------------------------------
+    # CORREO OK
+    # --------------------------------------------------------
+    enviar_correo(
+        "ETL Pabellón – Proceso OK",
+        (
+            "Proceso ETL de pabellón ejecutado correctamente.\n\n"
+            f"Fecha clínica procesada : {fecha_proceso}\n"
+            f"Fecha ejecución real    : {fecha_ejecucion_real}\n"
+            f"Registros cargados      : {len(formatted_rows)}\n"
+        ),
+        es_error=False,
+        adjunto_path=ruta_excel
+    )
+
+    logging.info("Proceso finalizado correctamente")
 
 except Exception as e:
-    logging.error(f"Error: {e}", exc_info=True)
+    logging.error(str(e), exc_info=True)
+
+    enviar_correo(
+        "ETL Pabellón – ERROR",
+        str(e),
+        es_error=True,
+        adjunto_path=ruta_excel
+    )
 
 finally:
-    if cursor_iris:
-        cursor_iris.close()
     if conn_iris:
         conn_iris.close()
-    if cursor_mysql:
-        cursor_mysql.close()
     if conn_mysql:
         conn_mysql.close()
     if jpype.isJVMStarted():
