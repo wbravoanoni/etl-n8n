@@ -163,6 +163,7 @@ fecha_proceso = None
 
 # Fecha real de ejecución (UNA sola vez)
 fecha_ejecucion_real = datetime.now(ZoneInfo("America/Santiago"))
+fecha_ejecucion_excel = fecha_ejecucion_real.replace(tzinfo=None)
 
 
 try:
@@ -245,7 +246,7 @@ try:
         ).date()
 
         formatted_rows.append(
-            tuple(map(str, datos)) + (fecha_ejecucion_real,)
+            tuple(map(str, datos)) + (fecha_ejecucion_excel,)
         )
 
     # --------------------------------------------------------
