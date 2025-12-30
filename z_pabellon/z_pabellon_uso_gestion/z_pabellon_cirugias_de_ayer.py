@@ -16,6 +16,7 @@ from email.mime.multipart import MIMEMultipart
 from email.mime.application import MIMEApplication
 from pathlib import Path
 import pandas as pd
+from zoneinfo import ZoneInfo
 
 # ============================================================
 # CARGA DE ENTORNO Y LOGS
@@ -161,7 +162,8 @@ ruta_excel = None
 fecha_proceso = None
 
 # Fecha real de ejecución (UNA sola vez)
-fecha_ejecucion_real = datetime.now()
+fecha_ejecucion_real = datetime.now(ZoneInfo("America/Santiago"))
+
 
 try:
     # --------------------------------------------------------
