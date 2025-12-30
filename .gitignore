@@ -4,3 +4,4 @@ __pycache__/
 *.log
 .env
 integracion-iris-sheets-1cadb87268e2.json
+logs/*xlsx
