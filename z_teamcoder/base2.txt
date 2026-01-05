@@ -1,0 +1,149 @@
+         SELECT
+    CASE 
+        WHEN a.PAADM_DepCode_DR->CTLOC_Hospital_DR = '10448' THEN '112100'
+        ELSE 'DESCONOCIDO'
+    END AS "HOSPITAL",
+    r.RTMAS_MRNo AS "HISTORIA",
+    a.PAADM_ADMNo as "EPISODIO",
+    CONVERT(VARCHAR(10), a.PAADM_PAPMI_DR->PAPMI_PAPER_DR->PAPER_Dob, 103) || ' 00:00:00' AS FECNAC,
+    a.PAADM_PAPMI_DR->PAPMI_PAPER_DR->PAPER_Sex_DR->CTSEX_code as "SEXO",
+    CONVERT(VARCHAR(10), a.PAADM_AdmDate, 103) || ' ' ||
+    COALESCE(CONVERT(VARCHAR(8), a.PAADM_AdmTime, 108), '00:00:00') AS FECING,
+    CASE UPPER(TRIM(a.PAADM_Type))
+        WHEN 'E' THEN 'URGENCIA'
+        WHEN 'I' THEN 'HOSPITALIZADO'
+        WHEN 'O' THEN 'AMBULATORIO'
+        WHEN 'G' THEN 'PROGRAMADA'
+        ELSE 'DESCONOCIDO'
+    END AS TIPING,
+    a.PAADM_PAPMI_DR->PAPMI_PAPER_DR->PAPER_AuxInsType_DR->AUXIT_InsType_DR->INST_Desc
+    || ' - ' ||
+    a.PAADM_PAPMI_DR->PAPMI_PAPER_DR->PAPER_AuxInsType_DR->AUXIT_Desc AS "REGCON_01",
+    CASE 
+        WHEN a.PAADM_PAPMI_DR->PAPMI_PAPER_DR->PAPER_IndigStat_DR->INDST_code = '6' THEN '1'
+        WHEN a.PAADM_PAPMI_DR->PAPMI_PAPER_DR->PAPER_IndigStat_DR->INDST_code = '3' THEN '2'
+        WHEN a.PAADM_PAPMI_DR->PAPMI_PAPER_DR->PAPER_IndigStat_DR->INDST_code = '8' THEN '3'
+        WHEN a.PAADM_PAPMI_DR->PAPMI_PAPER_DR->PAPER_IndigStat_DR->INDST_code = '2' THEN '4'
+        WHEN a.PAADM_PAPMI_DR->PAPMI_PAPER_DR->PAPER_IndigStat_DR->INDST_code = '7' THEN '5'
+        WHEN a.PAADM_PAPMI_DR->PAPMI_PAPER_DR->PAPER_IndigStat_DR->INDST_code = '4' THEN '6'
+        WHEN a.PAADM_PAPMI_DR->PAPMI_PAPER_DR->PAPER_IndigStat_DR->INDST_code = '5' THEN '7'
+        WHEN a.PAADM_PAPMI_DR->PAPMI_PAPER_DR->PAPER_IndigStat_DR->INDST_code = '1' THEN '8'
+        WHEN a.PAADM_PAPMI_DR->PAPMI_PAPER_DR->PAPER_IndigStat_DR->INDST_code = '9' THEN '9'
+        WHEN a.PAADM_PAPMI_DR->PAPMI_PAPER_DR->PAPER_IndigStat_DR->INDST_code = '11' THEN '10'
+        WHEN a.PAADM_PAPMI_DR->PAPMI_PAPER_DR->PAPER_IndigStat_DR->INDST_code = '0' THEN '96'
+        ELSE '96'
+    END AS "ETNIA",
+    a.PAADM_PAPMI_DR->PAPMI_PAPER_DR->PAPER_CityCode_DR->CTCIT_Province_DR->PROV_Code AS "DIST_PAC",
+    a.PAADM_PAPMI_DR->PAPMI_PAPER_DR->PAPER_CityCode_DR->CTCIT_Code AS "MRES",
+    a.PAADM_PAPMI_DR->PAPMI_PAPER_DR->PAPER_Nation_DR->CTNAT_Code AS "PAIS",
+    REPLACE(
+        CONVERT(VARCHAR, a.PAADM_DischgDate, 103) || ' ' ||
+        CONVERT(VARCHAR, a.PAADM_DischgTime, 108),
+        '-', '/'
+    ) AS FECALT,
+    a.PAADM_MainMRADM_DR->MRADM_DischClassif_DR->DSCL_Desc AS "TIPALT",
+    a.PAADM_DepCode_DR->CTLOC_Code AS "SERVING",
+    a.PAADM_CurrentWard_DR->WARD_Code AS "SERVALT",
+    CASE UPPER(TRIM(a.PAADM_PAPMI_DR->PAPMI_PAPER_DR->PAPER_PatType_DR->PTYPE_Code))
+        WHEN 'ID' THEN '1'
+        WHEN 'SD' THEN '3'
+        WHEN 'PN' THEN '3'
+        WHEN 'OI' THEN '4'
+        ELSE 'DESCONOCIDO'
+    END AS TIPO_CIP,
+    '' AS "ESPECIALIDAD",
+    '' as "SERVICIO_SALUD",
+    ana.FEC_INT_1,
+    '' as FECPART,
+    '' as TGESTAC,
+    '' as RN_PESO_01,
+    '' as RN_SEXO_01,
+    '' as RN_PESO_02,
+    '' as RN_SEXO_02,
+    '' as RN_PESO_03,
+    '' as RN_SEXO_03,
+    '' as RN_PESO_04,
+    '' as RN_SEXO_04,
+    '' as TRASHOSPITAL,
+    '' as PROCHOSPITAL,
+    a.PAADM_MedDischDoc_DR->CTPCP_Code as "MEDICOALT",
+    a.PAADM_PAPMI_DR->PAPMI_ID as "CIP",
+    '' as PROC,
+    '' as TIPO_ACTIVIDAD,
+    '' as RN_EST_01,
+    '' as RN_EST_02,
+    '' as RN_EST_03,
+    '' as RN_EST_04,
+    '' as ESTADO,
+    a.PAADM_PAPMI_DR->PAPMI_PAPER_DR->PAPER_Name2 as "NOMBRE",
+    a.PAADM_PAPMI_DR->PAPMI_PAPER_DR->PAPER_Name as "APELLIDO1",
+    a.PAADM_PAPMI_DR->PAPMI_PAPER_DR->PAPER_Name3 as "APELLIDO2",
+    (select top 1 INS_AuxInsType_DR->AUXIT_Desc 
+       from PA_AdmInsurance 
+      where INS_ParRef = PAADM_RowID 
+      order by INS_Childsub desc) "PROGRAMA",
+    '' as RN_COND_ING_01,
+    '' as RN_COND_ING_02,
+    '' as RN_COND_ING_03,
+    '' as RN_COND_ING_04,
+    '' as CUMPLIMENTACION,
+    ana.MED_INT_1,
+    '' as ESPINT,
+    rb.TIP_PAB,
+    '' as TRAS_FEC_01,
+    '' as TRAS_SRV_01,
+    '' as TRAS_FEC_02,
+    '' as TRAS_SRV_02,
+    '' as TRAS_FEC_03,
+    '' as TRAS_SRV_03,
+    '' as TRAS_FEC_04,
+    '' as TRAS_SRV_04,
+    '' as TRAS_FEC_05,
+    '' as TRAS_SRV_05,
+    '' as TRAS_FEC_06,
+    '' as TRAS_SRV_06,
+    '' as TRAS_FEC_07,
+    '' as TRAS_SRV_07,
+    '' as TRAS_FEC_08,
+    '' as TRAS_SRV_08,
+    '' as TRAS_FEC_09,
+    '' as TRAS_SRV_09,
+    '' as TRAS_FEC_10,
+    '' as TRAS_SRV_10,
+    CONVERT(VARCHAR(10), a.PAADM_InpatBedReqDate, 105) || ' ' ||
+    COALESCE(CONVERT(VARCHAR(8), a.PAADM_InpatBedReqTime, 108), '00:00:00') AS "FEC_URGENCIAS",
+    a.PAADM_PAPMI_DR->PAPMI_PAPER_DR->PAPER_Occupation_DR->CTOCC_Desc as OCUPACION,
+    CASE UPPER(TRIM(a.PAADM_PAPMI_DR->PAPMI_PAPER_DR->PAPER_EmploymentStat_DR->EMPLST_Code))
+        WHEN '07' THEN '0'
+        WHEN '08' THEN '1'
+        WHEN '09' THEN '2'
+        WHEN '99' THEN '99'
+        ELSE ''
+    END AS CAT_OCP
+FROM PA_ADM a
+-- Traer solo un registro de RB_OperatingRoom por episodio
+LEFT JOIN (
+    SELECT RBOP_PAADM_DR, MIN(RBOP_Resource_DR->RES_Desc) AS TIP_PAB
+    FROM RB_OperatingRoom
+    GROUP BY RBOP_PAADM_DR
+) rb ON rb.RBOP_PAADM_DR = a.PAADM_RowID
+-- Traer solo un registro de anestesia/operación por episodio
+LEFT JOIN (
+    SELECT an.ANA_PAADM_ParRef,
+           MIN(CONVERT(VARCHAR(10), ao.ANAOP_TheatreInDate, 103) || ' ' ||
+               COALESCE(CONVERT(VARCHAR(8), ao.ANAOP_TheatreInTime, 108), '00:00:00')) AS FEC_INT_1,
+           MIN(ao.ANAOP_Surgeon_DR->CTPCP_Code) AS MED_INT_1
+    FROM OR_Anaesthesia an
+    JOIN OR_Anaest_Operation ao ON ao.ANAOP_Par_Ref = an.ANA_RowId
+    GROUP BY an.ANA_PAADM_ParRef
+) ana ON ana.ANA_PAADM_ParRef = a.PAADM_RowId
+-- Traer solo un MRNo por paciente/hospital
+LEFT JOIN (
+    SELECT RTMAS_PatNo_DR, RTMAS_Hospital_DR, MIN(RTMAS_MRNo) AS RTMAS_MRNo
+    FROM RT_Master
+    GROUP BY RTMAS_PatNo_DR, RTMAS_Hospital_DR
+) r ON r.RTMAS_PatNo_DR = a.PAADM_PAPMI_DR 
+    AND r.RTMAS_Hospital_DR = a.PAADM_Hospital_DR
+JOIN PA_PatMas p ON p.PAPMI_RowId = a.PAADM_PAPMI_DR
+WHERE PAADM_Type='I' AND PAADM_DepCode_DR->CTLOC_Hospital_DR = 10448
+AND PAADM_DischgDate BETWEEN '2025-08-01' AND '2025-09-30';
