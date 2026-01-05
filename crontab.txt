@@ -1,0 +1,100 @@
+# Edit this file to introduce tasks to be run by cron.
+# 
+# Each task to run has to be defined through a single line
+# indicating with different fields when the task will be run
+# and what command to run for the task
+# 
+# To define the time you can provide concrete values for
+# minute (m), hour (h), day of month (dom), month (mon),
+# and day of week (dow) or use '*' in these fields (for 'any').
+# 
+# Notice that tasks will be started based on the cron's system
+# daemon's notion of time and timezones.
+# 
+# Output of the crontab jobs (including errors) is sent through
+# email to the user the crontab file belongs to (unless redirected).
+# 
+# For example, you can run a backup of all your user accounts
+# at 5 a.m every week with:
+# 0 5 * * 1 tar -zcf /var/backups/home.tgz /home/
+# 
+# For more information see the manual pages of crontab(5) and cron(8)
+# 
+# m h  dom mon dow   command
+
+
+*/5 * * * * /bin/bash -c 'cd /home/dtd/Documentos/automatizacion/etl-n8n && source /home/dtd/Documentos/automatizacion/etl-n8n/env/bin/activate && /home/dtd/Documentos/automatizacion/etl-n8n/env/bin/python zz_pruebas/log_fecha_ejecucion.py  >>/home/dtd/Documentos/automatizacion/etl-n8n/zz_pruebas/logs/cron19.log 2>&1'
+
+*/50 * * * * /bin/bash -c 'cd /home/dtd/Documentos/automatizacion/osticket && source /home/dtd/Documentos/automatizacion/osticket/env/bin/activate && /home/dtd/Documentos/automatizacion/osticket/env/bin/python update_table_funcion.py >> /home/dtd/Documentos/automatizacion/osticket/logs/cron.log 2>&1'
+
+10 17 * * * /bin/bash -c 'cd /home/dtd/Documentos/automatizacion/cargas_z && source /home/dtd/Documentos/automatizacion/cargas_z/env/bin/activate && /home/dtd/Documentos/automatizacion/cargas_z/env/bin/python z_indicaciones_ambulatorias.py >>/home/dtd/Documentos/automatizacion/cargas_z/logs/cron5.log 2>&1'
+
+0 3 * * * /bin/bash -c 'cd /home/dtd/Documentos/automatizacion/cargas_z && source /home/dtd/Documentos/automatizacion/cargas_z/env/bin/activate && /home/dtd/Documentos/automatizacion/cargas_z/env/bin/python z_indicacion_farmacos_ambulatorio.py >>/home/dtd/Documentos/automatizacion/cargas_z/logs/z_indicacion_farmacos_ambulatorio.log 2>&1'
+
+
+# LOCALES ********************************************************
+
+* 04 * * * /bin/bash -c 'cd /home/dtd/Documentos/automatizacion/cargas_z && source /home/dtd/Documentos/automatizacion/cargas_z/env/bin/activate && /home/dtd/Documentos/automatizacion/cargas_z/env/bin/python z_reglas_local_solicitante_receptores/z_reglas_local_solicitante_receptores_categoria.py >>/home/dtd/Documentos/automatizacion/cargas_z/z_reglas_local_solicitante_receptores/logs/cron11.log 2>&1'
+
+10 04 * * * /bin/bash -c 'cd /home/dtd/Documentos/automatizacion/cargas_z && source /home/dtd/Documentos/automatizacion/cargas_z/env/bin/activate && /home/dtd/Documentos/automatizacion/cargas_z/env/bin/python z_reglas_local_solicitante_receptores//z_reglas_local_solicitante_receptores_items.py >>/home/dtd/Documentos/automatizacion/cargas_z/z_reglas_local_solicitante_receptores/logs/cron12.log 2>&1'
+
+20 04 * * * /bin/bash -c 'cd /home/dtd/Documentos/automatizacion/cargas_z && source /home/dtd/Documentos/automatizacion/cargas_z/env/bin/activate && /home/dtd/Documentos/automatizacion/cargas_z/env/bin/python z_reglas_local_solicitante_receptores/z_reglas_local_solicitante_receptores_subcategoria.py >>/home/dtd/Documentos/automatizacion/cargas_z/z_reglas_local_solicitante_receptores/logs/cron13.log 2>&1'
+
+15 3 * * * /bin/bash -c 'cd /home/dtd/Documentos/automatizacion/cargas_z && source /home/dtd/Documentos/automatizacion/cargas_z/env/bin/activate && /home/dtd/Documentos/automatizacion/cargas_z/env/bin/python z_reglas_local_solicitante_receptores/z_reglas_local_solicitante_receptores_locales_hds.py >>/home/dtd/Documentos/automatizacion/cargas_z/z_reglas_local_solicitante_receptores/logs/z_reglas_local_solicitante_receptores_locales_hds.log 2>&1'
+
+# CUESTIONARIOS **************************************************
+
+0 3 * * * /bin/bash -c 'cd /home/dtd/Documentos/automatizacion/etl-n8n && source /home/dtd/Documentos/automatizacion/etl-n8n/env/bin/activate && /home/dtd/Documentos/automatizacion/etl-n8n/env/bin/python z_cuestionario/z0_cuestionario.py .py  >>/home/dtd/Documentos/automatizacion/etl-n8n/z_cuestionario/logs/cron19.log 2>&1'
+
+0 9 * * 5 /bin/bash -c 'cd /home/dtd/Documentos/automatizacion/etl-n8n && source /home/dtd/Documentos/automatizacion/etl-n8n/env/bin/activate && /home/dtd/Documentos/automatizacion/etl-n8n/env/bin/python z_cuestionario/z_cuestionario_NRS2002.py >> /home/dtd/Documentos/automatizacion/etl-n8n/z_usabilidad_coloproctologia/logs/cron19.log 2>&1'
+
+# MESA DE SERVICIO ***********************************************
+
+55 7,19 * * * /bin/bash -c 'cd /home/dtd/Documentos/automatizacion/etl-n8n && source /home/dtd/Documentos/automatizacion/etl-n8n/env/bin/activate && /home/dtd/Documentos/automatizacion/etl-n8n/env/bin/python z_mesa_de_servicio/z_mesa_de_servicio_usuarios_activos.py  >> /home/dtd/Documentos/automatizacion/etl-n8n/z_mesa_de_servicio/logs/cron19.log 2>&1'
+
+55 7,19 * * * /bin/bash -c 'cd /home/dtd/Documentos/automatizacion/etl-n8n && source /home/dtd/Documentos/automatizacion/etl-n8n/env/bin/activate && /home/dtd/Documentos/automatizacion/etl-n8n/env/bin/python z_mesa_de_servicio/z_mesa_de_servicio_grupos_perfiles.py  >> /home/dtd/Documentos/automatizacion/etl-n8n/z_mesa_de_servicio/logs/cron19.log 2>&1'
+
+# URGENCIA *******************************************************
+
+45 7-18/2 * * * /bin/bash -c 'cd /home/dtd/Documentos/automatizacion/etl-n8n && source /home/dtd/Documentos/automatizacion/etl-n8n/env/bin/activate && /home/dtd/Documentos/automatizacion/etl-n8n/env/bin/python z_urgencia/z_urgencia_ingresos.py  >> /home/dtd/Documentos/automatizacion/etl-n8n/z_urgencia/logs/cron19.log 2>&1'
+
+# PABELLON *******************************************************
+
+30 2 * * * /bin/bash -c 'cd /home/dtd/Documentos/automatizacion/etl-n8n && source /home/dtd/Documentos/automatizacion/etl-n8n/env/bin/activate && /home/dtd/Documentos/automatizacion/etl-n8n/env/bin/python z_pabellon/z_pabellon_optimizado.py >>/home/dtd/Documentos/automatizacion/etl-n8n/z_pabellon/logs/cron10.log 2>&1'
+
+40 2 * * * /bin/bash -c 'cd /home/dtd/Documentos/automatizacion/etl-n8n && source /home/dtd/Documentos/automatizacion/etl-n8n/env/bin/activate && /home/dtd/Documentos/automatizacion/etl-n8n/env/bin/python z_pabellon/z_pabellon_prueba_concepto.py >>/home/dtd/Documentos/automatizacion/etl-n8n/z_pabellon/logs/cron10.log 2>&1'
+
+20 10 * * * /bin/bash -c 'cd /home/dtd/Documentos/automatizacion/etl-n8n && source /home/dtd/Documentos/automatizacion/etl-n8n/env/bin/activate && /home/dtd/Documentos/automatizacion/etl-n8n/env/bin/python z_pabellon/z_pabellon_uso_gestion/z0_main.py >> /home/dtd/Documentos/automatizacion/etl-n8n/z_pabellon/z_pabellon_uso_gestion/logs/cron19.log 2>&1'
+
+05 23 * * * /bin/bash -c 'cd /home/dtd/Documentos/automatizacion/etl-n8n && source /home/dtd/Documentos/automatizacion/etl-n8n/env/bin/activate && /home/dtd/Documentos/automatizacion/etl-n8n/env/bin/python z_pabellon/z_pabellon_uso_gestion/z_pabellon_cirugias_de_ayer.py >> /home/dtd/Documentos/automatizacion/etl-n8n/z_pabellon/z_pabellon_uso_gestion/logs/cron20.log 2>&1'
+
+# HOSPITALIZADOS *************************************************
+
+00 6 * * * /bin/bash -c 'cd /home/dtd/Documentos/automatizacion/etl-n8n && source /home/dtd/Documentos/automatizacion/etl-n8n/env/bin/activate && /home/dtd/Documentos/automatizacion/etl-n8n/env/bin/python z_usabilidad_hospitalizados/z0_main.py >> /home/dtd/Documentos/automatizacion/etl-n8n/z_usabilidad_hospitalizados/logs/cron19.log 2>&1'
+
+# OFTALMOLOGIA *************************************************
+
+00 3 * * * /bin/bash -c 'cd /home/dtd/Documentos/automatizacion/etl-n8n && source /home/dtd/Documentos/automatizacion/etl-n8n/env/bin/activate && /home/dtd/Documentos/automatizacion/etl-n8n/env/bin/python z_usabilidad_oftalmologia/z0_main.py >> /home/dtd/Documentos/automatizacion/etl-n8n/z_usabilidad_oftalmologia/logs/cron19.log 2>&1'
+
+# UTO *************************************************
+
+03 5 * * * /bin/bash -c 'cd /home/dtd/Documentos/automatizacion/etl-n8n && source /home/dtd/Documentos/automatizacion/etl-n8n/env/bin/activate && /home/dtd/Documentos/automatizacion/etl-n8n/env/bin/python z_usabilidad_uto/z0_main.py >> /home/dtd/Documentos/automatizacion/etl-n8n/z_usabilidad_uto/logs/cron19.log 2>&1'
+
+# COLOPROCTOLOGIA *************************************************
+
+00 4 * * * /bin/bash -c 'cd /home/dtd/Documentos/automatizacion/etl-n8n && source /home/dtd/Documentos/automatizacion/etl-n8n/env/bin/activate && /home/dtd/Documentos/automatizacion/etl-n8n/env/bin/python z_usabilidad_coloproctologia/z0_main.py >> /home/dtd/Documentos/automatizacion/etl-n8n/z_usabilidad_coloproctologia/logs/cron19.log 2>&1'
+
+# TEAMCODER ***********************************************
+
+00 8 * * * /bin/bash -c 'cd /home/dtd/Documentos/automatizacion/cargas_z && source /home/dtd/Documentos/automatizacion/cargas_z/env/bin/activate && /home/dtd/Documentos/automatizacion/cargas_z/env/bin/python z_teamcoder/z0_main.py >>/home/dtd/Documentos/automatizacion/cargas_z/z_teamcoder/logs/z0_main.log 2>&1'
+
+# Actualizacion plantilla Listado de cirugias
+
+02 18 * * * /bin/bash -c 'cd /home/dtd/Documentos/automatizacion/etl-n8n && source /home/dtd/Documentos/automatizacion/etl-n8n/env/bin/activate && /home/dtd/Documentos/automatizacion/etl-n8n/env/bin/python z_reportes_google_sheet/z_reportes_cirugias_creadas.py >> /home/dtd/Documentos/automatizacion/etl-n8n/z_reportes_google_sheet/logs/cron19.log 2>&1'
+
+#actualizacion plantilla cirugias agendadas dia de mañana
+
+00 22 * * * /bin/bash -c 'cd /home/dtd/Documentos/automatizacion/etl-n8n && source /home/dtd/Documentos/automatizacion/etl-n8n/env/bin/activate && /home/dtd/Documentos/automatizacion/etl-n8n/env/bin/python z_reportes_google_sheet/z_reportes_pabellon_quirurgico.py >> /home/dtd/Documentos/automatizacion/etl-n8n/z_reportes_google_sheet/logs/cron19.log 2>&1'
+
+# Envio reporte semana Oficina GES
+00 9 * * 1 /bin/bash -c 'cd /home/dtd/Documentos/automatizacion/etl-n8n && source /home/dtd/Documentos/automatizacion/etl-n8n/env/bin/activate && /home/dtd/Documentos/automatizacion/etl-n8n/env/bin/python z_reporte_semanal_oficina_ges/z0_reporte_semanal_oficina_ges_main.py  >> /home/dtd/Documentos/automatizacion/etl-n8n/z_reporte_semanal_oficina_ges/logs/cron19.log 2>&1'
