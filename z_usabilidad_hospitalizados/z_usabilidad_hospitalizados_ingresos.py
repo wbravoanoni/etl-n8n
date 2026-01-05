@@ -90,7 +90,7 @@ def create_table_if_not_exists_ingresos(cursor, conn):
       `ProximoControl` VARCHAR(29),
       `IndicacionesAlAlta` TEXT,
       `DiagnosticoQueMotivoIngreso` TEXT,
-      `local_actual` VARCHAR(36),
+      `local_actual` VARCHAR(100),
       `estado_epicrisis` VARCHAR(1),
       `descripcion_estado_epicrisis` VARCHAR(13),
       `usuario_update_epicrisis` VARCHAR(44),
