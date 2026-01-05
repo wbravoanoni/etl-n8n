@@ -178,11 +178,12 @@ try:
                 )
             LEFT JOIN SS_User on PA_DischargeSummary.DIS_UpdateUser_DR = SSUSR_RowId
             WHERE
-                PAADM_AdmDate >= '2024-10-09'
+                PAADM_AdmDate >= DATEADD(MONTH, -12, CURRENT_DATE)
             and PAADM_Hospital_DR = 10448
             AND PAADM_Type = 'I';
         '''
-
+    
+    #PAADM_AdmDate >= '2024-10-09'
     cursor_iris.execute(query)
     rows = cursor_iris.fetchall()
 

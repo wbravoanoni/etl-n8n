@@ -151,11 +151,11 @@ try:
         convert(varchar, NOT_ParRef->MRADM_ADM_DR->PAADM_DischgTime, 108)
         from SQLUser.MR_NursingNotes
         where
-            NOT_Date >= '2024-10-09'
+            NOT_Date >= DATEADD(MONTH, -12, CURRENT_DATE)
             and NOT_Hospital_DR = 10448
             AND NOT_ParRef->MRADM_ADM_DR->PAAdm_Type='I'
     '''
-
+    #NOT_Date >= '2024-10-09'
     cursor_iris.execute(query)
     rows = cursor_iris.fetchall()
 
