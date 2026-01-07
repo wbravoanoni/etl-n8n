@@ -5,3 +5,5 @@ __pycache__/
 .env
 integracion-iris-sheets-1cadb87268e2.json
 logs/*xlsx
+
+z_teamcoder_quimioterapia_ambulatoria/resultados/*
