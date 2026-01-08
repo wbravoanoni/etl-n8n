@@ -73,6 +73,14 @@ def crear_tabla_si_no_existe(cursor):
         descripcion_cirugia_principal_del_protocolo_operatorio VARCHAR(214),
         RUT_Paciente VARCHAR(10),
         numero_cirugia VARCHAR(11),
+        fecha_ingreso_recuperacion VARCHAR(10),
+        hora_ingreso_recuperacion VARCHAR(10),    
+        fecha_egreso_recuperacion VARCHAR(10),   
+        hora_egreso_recuperacion VARCHAR(10),        
+        fecha_cirugia_agendada VARCHAR(10),
+        hora_cirugia_agendada VARCHAR(10),
+        fecha_ingreso_area_quirurgica VARCHAR(10),
+        hora_ingreso_area_quirurgica VARCHAR(10),          
         fechaActualizacion VARCHAR(19),
         INDEX idx_episodio (episodio),
         INDEX idx_fecha_cirugia (fecha_cirugia),
@@ -178,7 +186,15 @@ try:
         ANAOP.ANAOP_Type_DR->OPER_Code AS codigo_cirugia_principal_del_protocolo_pperatorio,
         ANAOP.ANAOP_Type_DR->OPER_Desc AS descripcion_cirugia_principal_del_protocolo_operatorio,
         RBOP.RBOP_PAADM_DR->PAADM_PAPMI_DR->PAPMI_ID AS RUT_Paciente,
-        ANAOP.ANAOP_No AS numero_cirugia
+        ANAOP.ANAOP_No AS numero_cirugia,
+        ANA.ANA_PACU_StartDate  AS fecha_ingreso_recuperacion,
+		ANA.ANA_PACU_StartTime  AS hora_ingreso_recuperacion,
+		ANA.ANA_PACU_FinishDate AS fecha_egreso_recuperacion,
+		ANA.ANA_PACU_FinishTime AS hora_egreso_recuperacion,
+		RBOP.RBOP_DateOper AS fecha_cirugia_agendada,
+		RBOP.RBOP_TimeOper AS hora_cirugia_agendada,
+        ANA.ANA_AreaInDate as fecha_ingreso_area_quirurgica,
+		ANA.ANA_AreaInTime as hora_ingreso_area_quirurgica
     FROM RB_OperatingRoom RBOP
     LEFT JOIN OR_Anaesthesia ANA
       ON RBOP.RBOP_PAADM_DR = ANA.ANA_PAADM_ParRef
@@ -247,10 +263,14 @@ try:
         fecha_termino_cirugia_en_protocolo_operatorio, hora_termino_cirugia_en_protocolo_operatorio,
         codigo_cirugia_principal_del_protocolo_pperatorio,
         descripcion_cirugia_principal_del_protocolo_operatorio,
-        RUT_Paciente, numero_cirugia, fechaActualizacion
+        RUT_Paciente, numero_cirugia, fecha_ingreso_recuperacion,
+        hora_ingreso_recuperacion,fecha_egreso_recuperacion,hora_egreso_recuperacion,
+        fecha_cirugia_agendada,hora_cirugia_agendada,fecha_ingreso_area_quirurgica,
+        hora_ingreso_area_quirurgica,fechaActualizacion
     ) VALUES (
         %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s,
-        %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s
+        %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s,
+        %s, %s, %s, %s, %s, %s
     )
     """
 
