@@ -7,3 +7,7 @@ integracion-iris-sheets-1cadb87268e2.json
 logs/*xlsx
 
 z_teamcoder_quimioterapia_ambulatoria/resultados/*
+z_usabilidad_5_salida_en_vivo/1_entrada/*.xlsx
+z_usabilidad_5_salida_en_vivo/2_proceso/*.xlsx
+z_usabilidad_5_salida_en_vivo/logs
+z_usabilidad_5_salida_en_vivo/pbix
