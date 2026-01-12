@@ -87,8 +87,8 @@ try:
         PAADM_PAAdm2_DR->PA_Adm2DischargeSummary->DIS_DischargeSummaryType_DR,
         PAADM_PAAdm2_DR->PA_Adm2DischargeSummary->DIS_PADischargeSummary_DR->DIS_CareProv_DR->CTPCP_CarPrvTp_DR->CTCPT_Desc
         FROM PA_ADM
-        WHERE PAADM_HOSPITAL_DR->HOSP_code='112100'
-        AND PAADM_CurrentWard_DR in (416,402,417,509,428,422,415)
+        WHERE PAADM_CurrentWard_DR in (416,402,417,399,428,415)
+        -- AND PAADM_HOSPITAL_DR->HOSP_code='112100'
         AND PAADM_RowID > 0
         AND PAADM_TYPE = 'I'
         AND PAADM_ADMDATE >='2025-01-01'

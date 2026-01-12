@@ -87,9 +87,9 @@ try:
         where PAADM_ADMDATE >= '2025-01-01' 
         AND PAADM_TYPE = 'I'
         AND PAADM_VISITSTATUS='A'
-        and PAADM_HOSPITAL_DR->HOSP_code='112100'
+        -- and PAADM_HOSPITAL_DR->HOSP_code='112100'
         and PAADM_MAINMRADM_DR->MR_Diagnos->MRDIA_Date >= '2026-01-07'
-        AND PAADM_CurrentWard_DR in (416,402,417,509,428,422,415)
+        AND PAADM_CurrentWard_DR in (416,402,417,399,428,415)
     """
 
     cursor.execute(query)
