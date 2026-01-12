@@ -105,8 +105,47 @@ df_final = df_final.sort_values(
     by=['Codigo', 'FECHA', 'SERVICIO']
 ).reset_index(drop=True)
 
+
 # ================================
-# 9. Exportar
+# 10. Cargar DIAGNÓSTICOS
+# ================================
+df_3_diagnosticos = pd.read_excel(
+    'z_usabilidad_5_salida_en_vivo/1_entrada/3_diagnosticos.xlsx'
+)
+
+df_diag = df_3_diagnosticos[
+    ['run_medico_registra_diagnostico', 'fecha_creacion', 'PAADM_CurrentWard_DR']
+].copy()
+
+df_diag.columns = ['Codigo', 'FECHA', 'SERVICIO']
+
+# Normalizar FECHA (eliminar hora)
+df_diag['FECHA'] = pd.to_datetime(df_diag['FECHA']).dt.normalize()
+
+# Asegurar tipo de SERVICIO
+df_diag['SERVICIO'] = df_diag['SERVICIO'].astype(int)
+
+# Crear flag
+df_diag['DIAGNÓSTICO'] = 'SI'
+
+df_diag_llave = (
+    df_diag[['Codigo', 'FECHA', 'SERVICIO', 'DIAGNÓSTICO']]
+    .drop_duplicates()
+)
+
+# ================================
+# 11. Merge con base principal
+# ================================
+df_final = df_final.merge(
+    df_diag_llave,
+    on=['Codigo', 'FECHA', 'SERVICIO'],
+    how='left'
+)
+
+df_final['DIAGNÓSTICO'] = df_final['DIAGNÓSTICO'].fillna('NO')
+
+# ================================
+# 12. Exportar
 # ================================
 output_path = (
     'z_usabilidad_5_salida_en_vivo/2_proceso/'

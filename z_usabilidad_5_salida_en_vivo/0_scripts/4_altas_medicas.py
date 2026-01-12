@@ -81,8 +81,7 @@ try:
         PAADM_MAINMRADM_DR->MR_Diagnos->MRDIA_ICDCode_DR->MRCID_Desc AS "Diagnóstico Principal",
         PAADM_PAAdm2_DR->PA_Adm2DischargeSummary->DIS_PADischargeSummary_DR->DIS_ClinicalOpinion AS "Indicaciones al Alta",
         PAADM_PAAdm2_DR->PA_Adm2DischargeSummary->DIS_PADischargeSummary_DR->DIS_CareProv_DR->CTPCP_Desc AS "Profesional Alta",
-        PAADM_PAAdm2_DR->PA_Adm2DischargeSummary->DIS_PADischargeSummary_DR->DIS_UpdateUser_DR->SSUSR_Initials
-            || ' ' ||
+        PAADM_PAAdm2_DR->PA_Adm2DischargeSummary->DIS_PADischargeSummary_DR->DIS_UpdateUser_DR->SSUSR_Initials  AS "rut Usuario Registro",
         PAADM_PAAdm2_DR->PA_Adm2DischargeSummary->DIS_PADischargeSummary_DR->DIS_UpdateUser_DR->SSUSR_Name AS "Usuario Registro",
         PAADM_PAAdm2_DR->PA_Adm2DischargeSummary->DIS_DischargeSummaryType_DR,
         PAADM_PAAdm2_DR->PA_Adm2DischargeSummary->DIS_PADischargeSummary_DR->DIS_CareProv_DR->CTPCP_CarPrvTp_DR->CTCPT_Desc
