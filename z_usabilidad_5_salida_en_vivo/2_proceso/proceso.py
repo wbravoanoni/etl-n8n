@@ -38,7 +38,7 @@ df_base = pd.concat(bloques, ignore_index=True)
 # ======================================================
 # 4. Replicar por SERVICIO
 # ======================================================
-servicios = [416, 402, 417, 509, 428, 422, 415]
+servicios = [416, 402, 417, 399, 428, 415]
 df_servicios = pd.DataFrame({'SERVICIO': servicios})
 
 df_final = df_base.merge(df_servicios, how='cross')
@@ -50,9 +50,8 @@ mapa_servicios = {
     416: 'Sala UPC Borquez Silva HDS',
     402: 'Sala U.C.I HDS',
     417: 'Sala UTIQ HDS',
-    509: 'Sala UPC U.T.I.M HDS',
+    399: 'Sala U.T.I.M. HDS',
     428: 'Sala UPC Hector Ducci HDS',
-    422: 'Sala J. Luco HDS',
     415: 'Sala UPC UHI HDS'
 }
 
@@ -151,15 +150,25 @@ df_export = df_final[
 ].copy()
 
 # ======================================================
-# 13. EXPORTAR SOLO LO RELEVANTE
+# 13. EXPORTAR ARCHIVOS (COMPLETO + FILTRADO)
 # ======================================================
-output_path = (
+
+# --- Archivo completo (auditoría / revisión) ---
+output_full = (
     'z_usabilidad_5_salida_en_vivo/2_proceso/'
-    'proceso.xlsx'
+    'df_clinico_COMPLETO_auditoria.xlsx'
 )
 
-df_export.to_excel(output_path, index=False)
+# df_final.to_excel(output_full, index=False)
 
-print("Archivo generado correctamente")
-print("Ruta:", output_path)
-print("Filas exportadas:", len(df_export))
+# --- Archivo filtrado (uso diario, liviano) ---
+output_filtered = (
+    'z_usabilidad_5_salida_en_vivo/2_proceso/'
+    'df_clinico_FILTRADO_eventos.xlsx'
+)
+
+df_export.to_excel(output_filtered, index=False)
+
+print("Archivos generados correctamente:")
+print("Completo :", output_full, "| Filas:", len(df_final))
+print("Filtrado :", output_filtered, "| Filas:", len(df_export))
