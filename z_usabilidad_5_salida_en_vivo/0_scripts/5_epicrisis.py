@@ -85,7 +85,9 @@ try:
         DIS_TextBox4 as ProximoControl,
         DIS_ClinicalOpinion as IndicacionesAlAlta,
         DIS_PrincipalDiagnosis as DiagnosticoQueMotivoIngreso,
-        PA_DischargeSummary.*
+        DIS_CareProv_DR->CTPCP_Code as rutMedicoContacto,
+        DIS_CareProv_DR->CTPCP_Desc as MedicoContacto,
+        PAADM_CurrentWard_DR
         FROM 
         PA_Adm
         LEFT JOIN PA_DischargeSummary on
