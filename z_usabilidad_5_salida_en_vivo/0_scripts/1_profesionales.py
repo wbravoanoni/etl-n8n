@@ -79,11 +79,10 @@ try:
                 CTPCP_CTLOC_DR->CTLOC_Desc AS "Local"
             FROM CT_CareProv 
             WHERE 
-                CTPCP_CarPrvTp_DR->CTCPT_RowId IN (56, 60, 71, 61, 73, 80, 83)
-                AND (
+                (
                     CTPCP_DateActiveTo IS NULL
                     OR CTPCP_DateActiveTo >= CURRENT_DATE
-                );
+                ) and CTPCP_CarPrvTp_DR->CTCPT_RowId IN (56, 60, 71, 61, 73, 80, 83);
     """
     #CTPCP_CTLOC_DR->CTLOC_Hospital_DR = '10448'
     cursor.execute(query)

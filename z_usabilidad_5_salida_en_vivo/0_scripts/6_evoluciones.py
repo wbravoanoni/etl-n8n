@@ -85,7 +85,7 @@ try:
             -- AND NOT_Hospital_DR = 10448 
             AND NOT_ParRef->MRADM_ADM_DR->PAAdm_Type='I'
             AND NOT_ParRef->MRADM_ADM_DR->PAADM_CurrentWard_DR->WARD_ROWID IN (416,402,417,399,428,415)
-            AND NOT_NurseId_DR->CTPCP_CarPrvTp_DR->CTCPT_Desc IN (
+            /*AND NOT_NurseId_DR->CTPCP_CarPrvTp_DR->CTCPT_Desc IN (
             'Médico',
             'Médico Cirujano', 
             'Psiquiatria',
@@ -95,7 +95,7 @@ try:
             'Cirujano Dentista',
             'Ginecólogo',
             'Ginecóloga'
-            );
+            )*/;
     """
 
     cursor.execute(query)

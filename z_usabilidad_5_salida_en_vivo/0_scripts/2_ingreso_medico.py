@@ -80,6 +80,7 @@ try:
         LEFT JOIN CT_CareProv ON b.SSUSR_CareProv_DR = CT_CareProv.CTPCP_RowId1
         LEFT JOIN CT_CarPrvTp ON CT_CareProv.CTPCP_CarPrvTp_DR = CT_CarPrvTp.CTCPT_RowId
         WHERE QUESDate>='2026-01-07' 
+        /*
         and 
         CT_CarPrvTp.CTCPT_Desc IN (
         'Médico',
@@ -92,6 +93,7 @@ try:
         'Ginecólogo',
         'Ginecóloga'
         )
+        */
         -- AND PAADM_DepCode_DR->CTLOC_Hospital_DR = 10448
         AND PAADM_CurrentWard_DR IN (416,402,417,399,428,415);
     """
