@@ -81,7 +81,8 @@ try:
         PAADM_MAINMRADM_DR->MR_Diagnos->MRDIA_Laterality_DR->LATER_Desc "lateridad",
         PAADM_MAINMRADM_DR->MR_Diagnos->MRDIA_Severity_DR->SEV_desc "severidad",
         PAADM_MAINMRADM_DR->MR_Diagnos->MRDIA_Active "activo",
-        PAADM_MAINMRADM_DR->MR_Diagnos->MRDIA_DeletionReason_DR->RCH_Desc "motivo_inactivacion"
+        PAADM_MAINMRADM_DR->MR_Diagnos->MRDIA_DeletionReason_DR->RCH_Desc "motivo_inactivacion",
+        PAADM_CurrentWard_DR
         FROM 
         PA_Adm
         where PAADM_ADMDATE >= '2025-01-01' 
