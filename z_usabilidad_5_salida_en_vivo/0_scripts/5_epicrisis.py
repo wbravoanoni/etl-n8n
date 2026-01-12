@@ -87,7 +87,8 @@ try:
         DIS_PrincipalDiagnosis as DiagnosticoQueMotivoIngreso,
         DIS_CareProv_DR->CTPCP_Code as rutMedicoContacto,
         DIS_CareProv_DR->CTPCP_Desc as MedicoContacto,
-        PAADM_CurrentWard_DR
+        PAADM_CurrentWard_DR,
+        PA_DischargeSummary.DIS_Date AS "DIS_Date" 
         FROM 
         PA_Adm
         LEFT JOIN PA_DischargeSummary on

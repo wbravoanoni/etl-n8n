@@ -145,7 +145,134 @@ df_final = df_final.merge(
 df_final['DIAGNÓSTICO'] = df_final['DIAGNÓSTICO'].fillna('NO')
 
 # ================================
-# 12. Exportar
+# 12. Cargar ALTA MÉDICA
+# ================================
+df_4_altas = pd.read_excel(
+    'z_usabilidad_5_salida_en_vivo/1_entrada/4_altas_medicas.xlsx'
+)
+
+df_alta = df_4_altas[
+    ['rut Usuario Registro', 'Fecha Alta', 'PAADM_DepCode_DR']
+].copy()
+
+df_alta.columns = ['Codigo', 'FECHA', 'SERVICIO']
+
+# Normalizar FECHA (eliminar hora)
+df_alta['FECHA'] = pd.to_datetime(df_alta['FECHA']).dt.normalize()
+
+# Asegurar tipo de SERVICIO
+df_alta['SERVICIO'] = df_alta['SERVICIO'].astype(int)
+
+# Crear flag
+df_alta['ALTA MÉDICA'] = 'SI'
+
+df_alta_llave = (
+    df_alta[['Codigo', 'FECHA', 'SERVICIO', 'ALTA MÉDICA']]
+    .drop_duplicates()
+)
+
+# ================================
+# 13. Merge con base principal
+# ================================
+df_final = df_final.merge(
+    df_alta_llave,
+    on=['Codigo', 'FECHA', 'SERVICIO'],
+    how='left'
+)
+
+df_final['ALTA MÉDICA'] = df_final['ALTA MÉDICA'].fillna('NO')
+
+
+# ================================
+# 14. Cargar EPICRISIS
+# ================================
+df_5_epicrisis = pd.read_excel(
+    'z_usabilidad_5_salida_en_vivo/1_entrada/5_epicrisis.xlsx'
+)
+
+df_epicrisis = df_5_epicrisis[
+    ['DIS_Date', 'rutMedicoContacto', 'PAADM_CurrentWard_DR']
+].copy()
+
+df_epicrisis.columns = ['FECHA', 'Codigo', 'SERVICIO']
+
+# Normalizar FECHA (eliminar hora)
+df_epicrisis['FECHA'] = pd.to_datetime(df_epicrisis['FECHA']).dt.normalize()
+
+# Asegurar tipo de SERVICIO
+df_epicrisis['SERVICIO'] = df_epicrisis['SERVICIO'].astype(int)
+
+# Crear flag
+df_epicrisis['EPICRISIS'] = 'SI'
+
+df_epicrisis_llave = (
+    df_epicrisis[['Codigo', 'FECHA', 'SERVICIO', 'EPICRISIS']]
+    .drop_duplicates()
+)
+
+# ================================
+# 15. Merge con base principal
+# ================================
+df_final = df_final.merge(
+    df_epicrisis_llave,
+    on=['Codigo', 'FECHA', 'SERVICIO'],
+    how='left'
+)
+
+df_final['EPICRISIS'] = df_final['EPICRISIS'].fillna('NO')
+
+
+
+# ================================
+# 16. Cargar EVOLUCIONES (FIX FECHA)
+# ================================
+df_6_evoluciones = pd.read_excel(
+    'z_usabilidad_5_salida_en_vivo/1_entrada/6_evoluciones.xlsx'
+)
+
+df_evo = df_6_evoluciones[
+    ['CodeProfesionalEvolucion', 'FechaEvolucion', 'WARD_RowID']
+].copy()
+
+df_evo.columns = ['Codigo', 'FECHA', 'SERVICIO']
+
+# 🔴 CLAVE: dayfirst=True
+df_evo['Codigo'] = df_evo['Codigo'].astype(str).str.strip()
+df_evo['FECHA'] = pd.to_datetime(
+    df_evo['FECHA'],
+    dayfirst=True
+).dt.normalize()
+
+df_evo['SERVICIO'] = df_evo['SERVICIO'].astype(int)
+
+# Flag
+df_evo['EVOLUCIÓN'] = 'SI'
+
+df_evo_llave = (
+    df_evo[['Codigo', 'FECHA', 'SERVICIO', 'EVOLUCIÓN']]
+    .drop_duplicates()
+)
+
+# ================================
+# 17. Normalizar BASE (seguridad)
+# ================================
+df_final['Codigo'] = df_final['Codigo'].astype(str).str.strip()
+df_final['FECHA'] = pd.to_datetime(df_final['FECHA']).dt.normalize()
+df_final['SERVICIO'] = df_final['SERVICIO'].astype(int)
+
+# ================================
+# 18. Merge correcto
+# ================================
+df_final = df_final.merge(
+    df_evo_llave,
+    on=['Codigo', 'FECHA', 'SERVICIO'],
+    how='left'
+)
+
+df_final['EVOLUCIÓN'] = df_final['EVOLUCIÓN'].fillna('NO')
+
+# ================================
+# 19. Exportar
 # ================================
 output_path = (
     'z_usabilidad_5_salida_en_vivo/2_proceso/'
