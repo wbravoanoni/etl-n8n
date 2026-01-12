@@ -8,8 +8,8 @@ df_1_profesionales = pd.read_excel(
     'z_usabilidad_5_salida_en_vivo/1_entrada/1_profesionales.xlsx'
 )
 
-df_codigos = df_1_profesionales.iloc[:, 0:2].copy()
-df_codigos.columns = ['Codigo', 'NOMBRE']
+df_codigos = df_1_profesionales.iloc[:, 0:3].copy()
+df_codigos.columns = ['Codigo', 'NOMBRE', 'Tipo']
 df_codigos = df_codigos.drop_duplicates().reset_index(drop=True)
 
 # ================================
@@ -27,6 +27,7 @@ for _, row in df_codigos.iterrows():
     df_tmp = pd.DataFrame({
         'Codigo': row['Codigo'],
         'NOMBRE': row['NOMBRE'],
+        'Tipo': row['Tipo'],
         'FECHA': pd.date_range(
             start=fecha_inicio,
             end=fecha_hoy,
@@ -40,7 +41,7 @@ df_base = pd.concat(bloques, ignore_index=True)
 # ================================
 # 4. Replicar por SERVICIO
 # ================================
-servicios = [416, 402, 417, 509, 428, 422, 415]
+servicios = [416, 402, 417, 399, 428, 415]
 df_servicios = pd.DataFrame({'SERVICIO': servicios})
 
 df_final = df_base.merge(df_servicios, how='cross')
@@ -52,9 +53,8 @@ mapa_servicios = {
     416: 'Sala UPC Borquez Silva HDS',
     402: 'Sala U.C.I HDS',
     417: 'Sala UTIQ HDS',
-    509: 'Sala UPC U.T.I.M HDS',
+    399: 'Sala U.T.I.M. HDS',
     428: 'Sala UPC Hector Ducci HDS',
-    422: 'Sala J. Luco HDS',
     415: 'Sala UPC UHI HDS'
 }
 
@@ -276,7 +276,7 @@ df_final['EVOLUCIÓN'] = df_final['EVOLUCIÓN'].fillna('NO')
 # ================================
 output_path = (
     'z_usabilidad_5_salida_en_vivo/2_proceso/'
-    'df_base_fechas_por_codigo_con_ingreso_medico.xlsx'
+    'proceso.xlsx'
 )
 
 df_final.to_excel(output_path, index=False)
