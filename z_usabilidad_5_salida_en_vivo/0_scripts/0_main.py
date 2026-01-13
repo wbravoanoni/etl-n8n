@@ -25,7 +25,8 @@ scripts = [
     os.path.join(BASE_DIR, "3_diagnosticos.py"),
     os.path.join(BASE_DIR, "4_altas_medicas.py"),
     os.path.join(BASE_DIR, "5_epicrisis.py"),
-    os.path.join(BASE_DIR, "6_evoluciones.py",
+    os.path.join(BASE_DIR, "6_evoluciones.py"),
+    os.path.join(BASE_DIR, "8_cuestionario_QTCERIESGO.py",
     ),
 ]
 
