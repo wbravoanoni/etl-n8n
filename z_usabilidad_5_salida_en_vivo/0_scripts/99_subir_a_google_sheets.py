@@ -22,27 +22,35 @@ logging.basicConfig(
 load_dotenv()
 service_account_path = os.getenv('GSHEET_CREDENTIALS')
 
-SHEET_NAME = '5ta etapa implementacion registro clinico electronico trakcare - Hospital del Salvador'
-
-BASE_ENTRADA = 'z_usabilidad_5_salida_en_vivo/1_entrada'
-BASE_PROCESO = 'z_usabilidad_5_salida_en_vivo/2_proceso'
+SHEET_NAME = (
+    '5ta etapa implementacion registro clinico electronico '
+    'trakcare - Hospital del Salvador'
+)
 
 # ======================================================
-# DEFINICIÓN DE ARCHIVOS → HOJAS
+# RUTA ÚNICA DE RESULTADOS
 # ======================================================
-ARCHIVOS_ENTRADA = {
-    '1_profesionales.xlsx': 'profesionales',
-    '2_ingreso_medico.xlsx': 'ingreso_medico',
-    '3_diagnosticos.xlsx': 'diagnosticos',
-    '4_altas_medicas.xlsx': 'altas_medicas',
-    '5_epicrisis.xlsx': 'epicrisis',
-    '6_evoluciones.xlsx': 'evoluciones',
-    '7_pacientes_hospitalizados.xlsx': 'pacientes_hospitalizados',
-    '8_cuestionario_QTCERIESGO.xlsx': 'cuestionario_qt'
+BASE_RESULTADOS = 'z_usabilidad_5_salida_en_vivo/3_resultados'
+
+# ======================================================
+# ARCHIVOS FINALES → HOJAS
+# ======================================================
+ARCHIVOS_RESULTADOS = {
+    '1_profesionales_pro.xlsx': 'profesionales',
+    '2_ingreso_medico_pro.xlsx': 'ingreso_medico',
+    '3_diagnosticos_pro.xlsx': 'diagnosticos',
+    '4_altas_medicas_pro.xlsx': 'altas_medicas',
+    '5_epicrisis_pro.xlsx': 'epicrisis',
+    '6_evoluciones_pro.xlsx': 'evoluciones',
+    '7_pacientes_hospitalizados_pro.xlsx': 'pacientes_hospitalizados',
+    '8_cuestionario_QTCERIESGO_pro.xlsx': 'cuestionario_qt'
 }
 
+# ======================================================
+# ARCHIVO RESUMEN (LOOKER / DASHBOARD)
+# ======================================================
 ARCHIVO_RESUMEN = {
-    'df_clinico_FILTRADO_eventos.xlsx': 'resumen'
+    '9_df_clinico_FILTRADO_eventos_pro.xlsx': 'resumen'
 }
 
 # ======================================================
@@ -85,7 +93,7 @@ def subir_excel_a_hoja(ruta_excel, nombre_hoja):
         logging.warning(f"Archivo vacío, se omite: {ruta_excel}")
         return
 
-    # Normalizar fechas
+    # Normalizar columnas de fecha (Looker-friendly)
     for col in df.columns:
         if 'fecha' in col.lower():
             try:
@@ -110,6 +118,7 @@ def subir_excel_a_hoja(ruta_excel, nombre_hoja):
 
     logging.info(f"Hoja '{nombre_hoja}' actualizada. Filas: {len(df)}")
 
+    # Autoajustar columnas
     time.sleep(1)
     try:
         sh.batch_update({
@@ -128,17 +137,46 @@ def subir_excel_a_hoja(ruta_excel, nombre_hoja):
         pass
 
 # ======================================================
-# SUBIR RESUMEN (LOOKER)
+# FUNCIÓN PARA MOVER HOJA AL INICIO
 # ======================================================
-for archivo, hoja in ARCHIVO_RESUMEN.items():
-    ruta = os.path.join(BASE_PROCESO, archivo)
+def mover_hoja_al_inicio(nombre_hoja):
+    try:
+        ws = sh.worksheet(nombre_hoja)
+
+        sh.batch_update({
+            "requests": [{
+                "updateSheetProperties": {
+                    "properties": {
+                        "sheetId": ws.id,
+                        "index": 0
+                    },
+                    "fields": "index"
+                }
+            }]
+        })
+
+        logging.info(f"Hoja '{nombre_hoja}' movida al inicio")
+
+    except Exception as e:
+        logging.warning(f"No se pudo mover la hoja '{nombre_hoja}': {e}")
+
+# ======================================================
+# SUBIR ARCHIVOS DE RESULTADOS
+# ======================================================
+for archivo, hoja in ARCHIVOS_RESULTADOS.items():
+    ruta = os.path.join(BASE_RESULTADOS, archivo)
     subir_excel_a_hoja(ruta, hoja)
 
 # ======================================================
-# SUBIR ARCHIVOS DE ENTRADA
+# SUBIR RESUMEN (LOOKER)
 # ======================================================
-for archivo, hoja in ARCHIVOS_ENTRADA.items():
-    ruta = os.path.join(BASE_ENTRADA, archivo)
+for archivo, hoja in ARCHIVO_RESUMEN.items():
+    ruta = os.path.join(BASE_RESULTADOS, archivo)
     subir_excel_a_hoja(ruta, hoja)
+
+# ======================================================
+# MOVER RESUMEN AL INICIO
+# ======================================================
+mover_hoja_al_inicio('resumen')
 
 logging.info("Todas las hojas fueron subidas correctamente")
