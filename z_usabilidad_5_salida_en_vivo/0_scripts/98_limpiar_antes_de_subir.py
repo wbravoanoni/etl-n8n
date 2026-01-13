@@ -267,4 +267,4 @@ for archivo, reglas in CONFIG.items():
     df.to_excel(ruta_salida, index=False)
     logging.info(f"Archivo generado: {ruta_salida}")
 
-logging.info("✅ Preprocesamiento finalizado correctamente")
+logging.info("Preprocesamiento finalizado correctamente")
