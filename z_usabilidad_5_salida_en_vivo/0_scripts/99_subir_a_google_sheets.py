@@ -78,7 +78,7 @@ except gspread.SpreadsheetNotFound:
     raise
 
 # ======================================================
-# FUNCIÓN GENÉRICA DE SUBIDA
+# FUNCIÓN GENÉRICA DE SUBIDA (LIMPIA PARA LOOKER)
 # ======================================================
 def subir_excel_a_hoja(ruta_excel, nombre_hoja):
     logging.info(f"Subiendo {ruta_excel} → hoja '{nombre_hoja}'")
@@ -92,6 +92,10 @@ def subir_excel_a_hoja(ruta_excel, nombre_hoja):
     if df.empty:
         logging.warning(f"Archivo vacío, se omite: {ruta_excel}")
         return
+
+    # Fecha de actualización (misma para todas las filas)
+    fecha_actualizacion = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    df['fecha_actualizacion'] = fecha_actualizacion
 
     # Normalizar columnas de fecha (Looker-friendly)
     for col in df.columns:
@@ -110,11 +114,8 @@ def subir_excel_a_hoja(ruta_excel, nombre_hoja):
     except gspread.WorksheetNotFound:
         ws = sh.add_worksheet(title=nombre_hoja, rows="100", cols="50")
 
-    fecha_actual = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-
     ws.clear()
-    ws.update(values=[[f"Última actualización: {fecha_actual}"]], range_name="A1")
-    ws.update(values=data, range_name="A2")
+    ws.update(values=data, range_name="A1")
 
     logging.info(f"Hoja '{nombre_hoja}' actualizada. Filas: {len(df)}")
 
