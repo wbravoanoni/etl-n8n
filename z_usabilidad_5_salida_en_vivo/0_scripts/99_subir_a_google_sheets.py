@@ -99,7 +99,7 @@ def subir_excel_a_hoja(ruta_excel, nombre_hoja):
 
     # Normalizar columnas de fecha (Looker-friendly)
     for col in df.columns:
-        if 'fecha' in col.lower():
+        if 'fecha' in col.lower() and col != 'fecha_actualizacion':
             try:
                 df[col] = pd.to_datetime(df[col]).dt.strftime('%Y-%m-%d')
             except Exception:
