@@ -127,7 +127,9 @@ CONFIG = {
             'RUNPaciente': 'rut_paciente',
             'NumeroEpisodio': 'episodio',
             'Local Actual': 'servicio',
-            'DIS_Date': 'fecha_creacion'
+            'DIS_Date': 'fecha_creacion',
+            'rutMedicoContacto': 'rut_medico_contacto',
+            'MedicoContacto.1': 'medico_contacto',
         },
         'drop': [
             'HOSP_Code',
@@ -149,8 +151,6 @@ CONFIG = {
             'ProximoControl',
             'IndicacionesAlAlta',
             'DiagnosticoQueMotivoIngreso',
-            'rutMedicoContacto',
-            'MedicoContacto.1',
             'PAADM_CurrentWard_DR'
         ]
     },

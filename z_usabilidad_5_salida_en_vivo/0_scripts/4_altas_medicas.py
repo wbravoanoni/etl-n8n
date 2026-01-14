@@ -84,7 +84,8 @@ try:
         PAADM_PAAdm2_DR->PA_Adm2DischargeSummary->DIS_PADischargeSummary_DR->DIS_UpdateUser_DR->SSUSR_Initials  AS "rut Usuario Registro",
         PAADM_PAAdm2_DR->PA_Adm2DischargeSummary->DIS_PADischargeSummary_DR->DIS_UpdateUser_DR->SSUSR_Name AS "Usuario Registro",
         PAADM_PAAdm2_DR->PA_Adm2DischargeSummary->DIS_DischargeSummaryType_DR,
-        PAADM_PAAdm2_DR->PA_Adm2DischargeSummary->DIS_PADischargeSummary_DR->DIS_CareProv_DR->CTPCP_CarPrvTp_DR->CTCPT_Desc
+        PAADM_PAAdm2_DR->PA_Adm2DischargeSummary->DIS_PADischargeSummary_DR->DIS_CareProv_DR->CTPCP_CarPrvTp_DR->CTCPT_Desc,
+        PAADM_CurrentWard_DR->WARD_Desc as "local_registro"
         FROM PA_ADM
         WHERE PAADM_CurrentWard_DR in (416,402,417,399,428,415)
         -- AND PAADM_HOSPITAL_DR->HOSP_code='112100'

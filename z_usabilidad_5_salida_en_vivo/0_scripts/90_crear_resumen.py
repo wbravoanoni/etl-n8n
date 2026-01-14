@@ -2,6 +2,17 @@ import pandas as pd
 from datetime import datetime
 
 # ======================================================
+# FUNCIÓN ESTÁNDAR: NORMALIZAR RUT
+# ======================================================
+def normalizar_rut(serie):
+    return (
+        serie
+        .astype(str)
+        .str.strip()
+        .str.upper()
+    )
+
+# ======================================================
 # 1. Cargar PROFESIONALES (Codigo, Nombre, Tipo)
 # ======================================================
 df_prof = pd.read_excel(
@@ -10,8 +21,15 @@ df_prof = pd.read_excel(
 
 df_prof = df_prof.iloc[:, 0:3].copy()
 df_prof.columns = ['Codigo', 'NOMBRE', 'Tipo']
-df_prof['Codigo'] = df_prof['Codigo'].astype(str).str.strip()
-df_prof = df_prof.drop_duplicates(subset=['Codigo']).reset_index(drop=True)
+
+# 🔐 Normalización RUT
+df_prof['Codigo'] = normalizar_rut(df_prof['Codigo'])
+
+df_prof = (
+    df_prof
+    .drop_duplicates(subset=['Codigo'])
+    .reset_index(drop=True)
+)
 
 # ======================================================
 # 2. Parámetros de FECHA BASE
@@ -29,7 +47,11 @@ for _, row in df_prof.iterrows():
         'Codigo': row['Codigo'],
         'NOMBRE': row['NOMBRE'],
         'Tipo': row['Tipo'],
-        'FECHA': pd.date_range(start=fecha_inicio, end=fecha_hoy, freq='D')
+        'FECHA': pd.date_range(
+            start=fecha_inicio,
+            end=fecha_hoy,
+            freq='D'
+        )
     })
     bloques.append(df_tmp)
 
@@ -58,21 +80,37 @@ mapa_servicios = {
 df_final['SERVICIO_DESC'] = df_final['SERVICIO'].map(mapa_servicios)
 
 # Normalización base
+df_final['Codigo'] = normalizar_rut(df_final['Codigo'])
 df_final['FECHA'] = pd.to_datetime(df_final['FECHA']).dt.normalize()
 df_final['SERVICIO'] = df_final['SERVICIO'].astype(int)
 
 # ======================================================
 # 6. FUNCIÓN GENÉRICA PARA FLAGS CLÍNICOS
 # ======================================================
-def aplicar_flag(df_base, df_evento, columnas, nombre_flag, dayfirst=False):
+def aplicar_flag(
+    df_base,
+    df_evento,
+    columnas,
+    nombre_flag,
+    dayfirst=False
+):
     df = df_evento[columnas].copy()
     df.columns = ['Codigo', 'FECHA', 'SERVICIO']
-    df['Codigo'] = df['Codigo'].astype(str).str.strip()
-    df['FECHA'] = pd.to_datetime(df['FECHA'], dayfirst=dayfirst).dt.normalize()
+
+    # 🔐 Normalización de llave
+    df['Codigo'] = normalizar_rut(df['Codigo'])
+    df['FECHA'] = pd.to_datetime(
+        df['FECHA'],
+        dayfirst=dayfirst
+    ).dt.normalize()
     df['SERVICIO'] = df['SERVICIO'].astype(int)
+
     df[nombre_flag] = 'SI'
 
-    df = df[['Codigo', 'FECHA', 'SERVICIO', nombre_flag]].drop_duplicates()
+    df = (
+        df[['Codigo', 'FECHA', 'SERVICIO', nombre_flag]]
+        .drop_duplicates()
+    )
 
     df_base = df_base.merge(
         df,
@@ -88,7 +126,9 @@ def aplicar_flag(df_base, df_evento, columnas, nombre_flag, dayfirst=False):
 # ======================================================
 df_final = aplicar_flag(
     df_final,
-    pd.read_excel('z_usabilidad_5_salida_en_vivo/1_entrada/2_ingreso_medico.xlsx'),
+    pd.read_excel(
+        'z_usabilidad_5_salida_en_vivo/1_entrada/2_ingreso_medico.xlsx'
+    ),
     ['SSUSR_Initials', 'QUESDate', 'PAADM_CurrentWard_DR'],
     'INGRESO MÉDICO'
 )
@@ -98,7 +138,9 @@ df_final = aplicar_flag(
 # ======================================================
 df_final = aplicar_flag(
     df_final,
-    pd.read_excel('z_usabilidad_5_salida_en_vivo/1_entrada/3_diagnosticos.xlsx'),
+    pd.read_excel(
+        'z_usabilidad_5_salida_en_vivo/1_entrada/3_diagnosticos.xlsx'
+    ),
     ['run_medico_registra_diagnostico', 'fecha_creacion', 'PAADM_CurrentWard_DR'],
     'DIAGNÓSTICO'
 )
@@ -108,7 +150,9 @@ df_final = aplicar_flag(
 # ======================================================
 df_final = aplicar_flag(
     df_final,
-    pd.read_excel('z_usabilidad_5_salida_en_vivo/1_entrada/4_altas_medicas.xlsx'),
+    pd.read_excel(
+        'z_usabilidad_5_salida_en_vivo/1_entrada/4_altas_medicas.xlsx'
+    ),
     ['rut Usuario Registro', 'Fecha Alta', 'PAADM_DepCode_DR'],
     'ALTA MÉDICA'
 )
@@ -118,7 +162,9 @@ df_final = aplicar_flag(
 # ======================================================
 df_final = aplicar_flag(
     df_final,
-    pd.read_excel('z_usabilidad_5_salida_en_vivo/1_entrada/5_epicrisis.xlsx'),
+    pd.read_excel(
+        'z_usabilidad_5_salida_en_vivo/1_entrada/5_epicrisis.xlsx'
+    ),
     ['rutMedicoContacto', 'DIS_Date', 'PAADM_CurrentWard_DR'],
     'EPICRISIS'
 )
@@ -128,14 +174,16 @@ df_final = aplicar_flag(
 # ======================================================
 df_final = aplicar_flag(
     df_final,
-    pd.read_excel('z_usabilidad_5_salida_en_vivo/1_entrada/6_evoluciones.xlsx'),
+    pd.read_excel(
+        'z_usabilidad_5_salida_en_vivo/1_entrada/6_evoluciones.xlsx'
+    ),
     ['CodeProfesionalEvolucion', 'FechaEvolucion', 'WARD_RowID'],
     'EVOLUCIÓN',
     dayfirst=True
 )
 
 # ======================================================
-# 12. FILTRO FINAL (ESTO ES LO QUE OPTIMIZA)
+# 12. FILTRO FINAL (OPTIMIZA DATASET)
 # ======================================================
 columnas_eventos = [
     'INGRESO MÉDICO',
@@ -150,10 +198,10 @@ df_export = df_final[
 ].copy()
 
 # ======================================================
-# 13. EXPORTAR ARCHIVOS (COMPLETO + FILTRADO)
+# 13. EXPORTAR ARCHIVOS
 # ======================================================
 
-# --- Archivo completo (auditoría / revisión) ---
+# --- Archivo completo (auditoría) ---
 output_full = (
     'z_usabilidad_5_salida_en_vivo/2_proceso/'
     'df_clinico_COMPLETO_auditoria.xlsx'
@@ -161,7 +209,7 @@ output_full = (
 
 # df_final.to_excel(output_full, index=False)
 
-# --- Archivo filtrado (uso diario, liviano) ---
+# --- Archivo filtrado (uso diario / Looker) ---
 output_filtered = (
     'z_usabilidad_5_salida_en_vivo/2_proceso/'
     'df_clinico_FILTRADO_eventos.xlsx'
