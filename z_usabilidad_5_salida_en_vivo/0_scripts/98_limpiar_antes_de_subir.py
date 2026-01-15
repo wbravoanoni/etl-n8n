@@ -129,7 +129,7 @@ CONFIG = {
             'Local Actual': 'servicio',
             'DIS_Date': 'fecha_creacion',
             'rutMedicoContacto': 'rut_medico_contacto',
-            'MedicoContacto.1': 'medico_contacto',
+            'MedicoContacto.1': 'medico_contacto'
         },
         'drop': [
             'HOSP_Code',
@@ -203,7 +203,7 @@ CONFIG = {
     },
 
     # --------------------------------------------------
-    # 8. CUESTIONARIO QT CERI RIESGO
+    # 8. CUESTIONARIO QT
     # --------------------------------------------------
     '8_cuestionario_QTCERIESGO.xlsx': {
         'salida': '8_cuestionario_QTCERIESGO_pro.xlsx',
@@ -212,7 +212,7 @@ CONFIG = {
     },
 
     # --------------------------------------------------
-    # 9. DATASET CLÍNICO FILTRADO (origen 2_proceso)
+    # 9. DATASET CLÍNICO FILTRADO (SOLO MÉDICOS)
     # --------------------------------------------------
     'df_clinico_FILTRADO_eventos.xlsx': {
         'origen': '2_proceso',
@@ -238,7 +238,6 @@ CONFIG = {
 # ============================
 for archivo, reglas in CONFIG.items():
 
-    # Origen correcto
     base_origen = BASE_ENTRADA
     if reglas.get('origen') == '2_proceso':
         base_origen = BASE_PROCESO
@@ -261,7 +260,24 @@ for archivo, reglas in CONFIG.items():
     cols_drop = [c for c in reglas.get('drop', []) if c in df.columns]
     if cols_drop:
         df = df.drop(columns=cols_drop)
-        logging.info(f"Columnas eliminadas: {cols_drop}")
+
+    # ---------------------------------------------
+    # REGLA ESPECIAL: SOLO MÉDICOS (ARCHIVO 9)
+    # ---------------------------------------------
+    if archivo == 'df_clinico_FILTRADO_eventos.xlsx' and 'tipo' in df.columns:
+
+        df['tipo'] = (
+            df['tipo']
+            .astype(str)
+            .str.strip()
+            .str.lower()
+        )
+
+        df.loc[df['tipo'] == 'médico cirujano', 'tipo'] = 'médico'
+        df = df[df['tipo'] == 'médico'].copy()
+        df['tipo'] = 'Médico'
+
+        logging.info(f"Filtrado solo Médicos | Filas finales: {len(df)}")
 
     # Guardar salida
     df.to_excel(ruta_salida, index=False)
