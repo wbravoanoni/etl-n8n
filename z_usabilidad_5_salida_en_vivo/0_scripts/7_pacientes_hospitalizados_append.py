@@ -26,7 +26,7 @@ iris_password = os.getenv('DB_PASSWORD')
 
 fecha_hoy = datetime.now().strftime('%Y-%m-%d')
 fecha_ejecucion = datetime.now().strftime('%Y-%m-%d_%H%M%S')
-archivo_excel = f"z_usabilidad_5_salida_en_vivo/1_entrada/7_pacientes_hospitalizados.xlsx"
+archivo_excel = f"z_usabilidad_5_salida_en_vivo/99_pacientes_hospitalizados/7_pacientes_hospitalizados_{fecha_ejecucion}.xlsx"
 
 
 if os.path.exists(archivo_excel):
