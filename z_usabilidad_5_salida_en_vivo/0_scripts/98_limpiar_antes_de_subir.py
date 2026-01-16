@@ -149,6 +149,44 @@ CONFIG = {
     },
 
     # --------------------------------------------------
+    # 5. EPICRISIS
+    # --------------------------------------------------
+    '5_epicrisis.xlsx': {
+        'salida': '5_epicrisis_pro.xlsx',
+        'rename': {
+            'NombrePaciente': 'nombre_paciente',
+            'RUNPaciente': 'rut_paciente',
+            'NumeroEpisodio': 'episodio',
+            'Local Actual': 'servicio',
+            'DIS_Date': 'fecha_creacion',
+            'rutMedicoContacto': 'rut_medico_contacto',
+            'MedicoContacto.1': 'medico_contacto',
+        },
+        'drop': [
+            'HOSP_Code',
+            'SexoCodigo',
+            'Sexo',
+            'Comuna',
+            'EstablecimientoInscripción',
+            'ServicioClinicoCodigo',
+            'ServicioClinico',
+            'FechaAtencion',
+            'FechaEgreso',
+            'FechaAlta',
+            'DestinoEgreso',
+            'code',
+            'MedicoContacto',
+            'Hosp',
+            'subtipoepi',
+            'TratamientoRecibido',
+            'ProximoControl',
+            'IndicacionesAlAlta',
+            'DiagnosticoQueMotivoIngreso',
+            'PAADM_CurrentWard_DR'
+        ]
+    },
+
+    # --------------------------------------------------
     # 6. EVOLUCIONES (SOLO NORMALIZA)
     # --------------------------------------------------
     '6_evoluciones.xlsx': {
@@ -175,6 +213,36 @@ CONFIG = {
         ],
         'accion_tipo': 'normalizar'
     },
+
+     # --------------------------------------------------
+    # 7. PACIENTES HOSPITALIZADOS
+    # --------------------------------------------------
+    '7_pacientes_hospitalizados.xlsx': {
+        'salida': '7_pacientes_hospitalizados_pro.xlsx',
+        'rename': {
+            'Episodio': 'episodio',
+            'Fecha Admision': 'fecha_admision',
+            'Hora Admision': 'hora_admision',
+            'RUT Paciente': 'rut_paciente',
+            'Nombre Paciente': 'nombre_paciente',
+            'Apellido Paterno Paciente': 'apellido_paterno_paciente',
+            'Apellido Materno Paciente': 'apellido_materno_paciente',
+            'Rut Profesional crea': 'rut_profesional',
+            'Nombre Profesional crea': 'nombre_profesional',
+            'Unidad Servicio / Clínico': 'servicio'
+        },
+        'drop': ['Local']
+    },
+
+    # --------------------------------------------------
+    # 8. CUESTIONARIO QT CERI RIESGO
+    # --------------------------------------------------
+    '8_cuestionario_QTCERIESGO.xlsx': {
+        'salida': '8_cuestionario_QTCERIESGO_pro.xlsx',
+        'rename': {},
+        'drop': ['campo1']
+    },
+
 
     # --------------------------------------------------
     # 9. DATASET CLÍNICO FILTRADO (NORMALIZA + FILTRA)
