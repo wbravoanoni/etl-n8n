@@ -20,6 +20,35 @@ BASE_RESULTADOS = 'z_usabilidad_5_salida_en_vivo/3_resultados'
 os.makedirs(BASE_RESULTADOS, exist_ok=True)
 
 # ============================
+# FUNCIONES DE NORMALIZACIÓN
+# ============================
+def normalizar_tipo(df, columna_tipo):
+    """
+    Normaliza 'Médico Cirujano' -> 'Médico'
+    SIN filtrar otros estamentos
+    """
+    df[columna_tipo] = (
+        df[columna_tipo]
+        .astype(str)
+        .str.strip()
+        .str.lower()
+    )
+
+    df.loc[df[columna_tipo] == 'médico cirujano', columna_tipo] = 'médico'
+
+    df[columna_tipo] = df[columna_tipo].str.capitalize()
+    return df
+
+
+def normalizar_y_filtrar_medicos(df, columna_tipo):
+    """
+    Normaliza y deja SOLO Médicos
+    """
+    df = normalizar_tipo(df, columna_tipo)
+    df = df[df[columna_tipo] == 'Médico'].copy()
+    return df
+
+# ============================
 # CONFIGURACIÓN POR ARCHIVO
 # ============================
 CONFIG = {
@@ -44,7 +73,7 @@ CONFIG = {
     },
 
     # --------------------------------------------------
-    # 2. INGRESO MÉDICO
+    # 2. INGRESO MÉDICO (NORMALIZA + FILTRA)
     # --------------------------------------------------
     '2_ingreso_medico.xlsx': {
         'salida': '2_ingreso_medico_pro.xlsx',
@@ -63,7 +92,8 @@ CONFIG = {
             'CTLOC_Code',
             'CTLOC_Desc',
             'PAADM_CurrentWard_DR'
-        ]
+        ],
+        'accion_tipo': 'filtrar_medicos'
     },
 
     # --------------------------------------------------
@@ -86,7 +116,7 @@ CONFIG = {
     },
 
     # --------------------------------------------------
-    # 4. ALTAS MÉDICAS
+    # 4. ALTAS MÉDICAS (SOLO NORMALIZA)
     # --------------------------------------------------
     '4_altas_medicas.xlsx': {
         'salida': '4_altas_medicas_pro.xlsx',
@@ -114,49 +144,12 @@ CONFIG = {
             'Diagnóstico Principal',
             'Indicaciones al Alta',
             'DIS_DischargeSummaryType_DR'
-        ]
+        ],
+        'accion_tipo': 'normalizar'
     },
 
     # --------------------------------------------------
-    # 5. EPICRISIS
-    # --------------------------------------------------
-    '5_epicrisis.xlsx': {
-        'salida': '5_epicrisis_pro.xlsx',
-        'rename': {
-            'NombrePaciente': 'nombre_paciente',
-            'RUNPaciente': 'rut_paciente',
-            'NumeroEpisodio': 'episodio',
-            'Local Actual': 'servicio',
-            'DIS_Date': 'fecha_creacion',
-            'rutMedicoContacto': 'rut_medico_contacto',
-            'MedicoContacto.1': 'medico_contacto'
-        },
-        'drop': [
-            'HOSP_Code',
-            'SexoCodigo',
-            'Sexo',
-            'Comuna',
-            'EstablecimientoInscripción',
-            'ServicioClinicoCodigo',
-            'ServicioClinico',
-            'FechaAtencion',
-            'FechaEgreso',
-            'FechaAlta',
-            'DestinoEgreso',
-            'code',
-            'MedicoContacto',
-            'Hosp',
-            'subtipoepi',
-            'TratamientoRecibido',
-            'ProximoControl',
-            'IndicacionesAlAlta',
-            'DiagnosticoQueMotivoIngreso',
-            'PAADM_CurrentWard_DR'
-        ]
-    },
-
-    # --------------------------------------------------
-    # 6. EVOLUCIONES
+    # 6. EVOLUCIONES (SOLO NORMALIZA)
     # --------------------------------------------------
     '6_evoluciones.xlsx': {
         'salida': '6_evoluciones_pro.xlsx',
@@ -179,40 +172,12 @@ CONFIG = {
             'Tipo_Evolucion',
             'Usuario_Evolucion',
             'WARD_RowID'
-        ]
+        ],
+        'accion_tipo': 'normalizar'
     },
 
     # --------------------------------------------------
-    # 7. PACIENTES HOSPITALIZADOS
-    # --------------------------------------------------
-    '7_pacientes_hospitalizados.xlsx': {
-        'salida': '7_pacientes_hospitalizados_pro.xlsx',
-        'rename': {
-            'Episodio': 'episodio',
-            'Fecha Admision': 'fecha_admision',
-            'Hora Admision': 'hora_admision',
-            'RUT Paciente': 'rut_paciente',
-            'Nombre Paciente': 'nombre_paciente',
-            'Apellido Paterno Paciente': 'apellido_paterno_paciente',
-            'Apellido Materno Paciente': 'apellido_materno_paciente',
-            'Rut Profesional crea': 'rut_profesional',
-            'Nombre Profesional crea': 'nombre_profesional',
-            'Unidad Servicio / Clínico': 'servicio'
-        },
-        'drop': ['Local']
-    },
-
-    # --------------------------------------------------
-    # 8. CUESTIONARIO QT
-    # --------------------------------------------------
-    '8_cuestionario_QTCERIESGO.xlsx': {
-        'salida': '8_cuestionario_QTCERIESGO_pro.xlsx',
-        'rename': {},
-        'drop': ['campo1']
-    },
-
-    # --------------------------------------------------
-    # 9. DATASET CLÍNICO FILTRADO (SOLO MÉDICOS)
+    # 9. DATASET CLÍNICO FILTRADO (NORMALIZA + FILTRA)
     # --------------------------------------------------
     'df_clinico_FILTRADO_eventos.xlsx': {
         'origen': '2_proceso',
@@ -229,7 +194,8 @@ CONFIG = {
             'EPICRISIS': 'epicrisis',
             'EVOLUCIÓN': 'evolucion'
         },
-        'drop': ['SERVICIO']
+        'drop': ['SERVICIO'],
+        'accion_tipo': 'filtrar_medicos'
     }
 }
 
@@ -252,34 +218,27 @@ for archivo, reglas in CONFIG.items():
     logging.info(f"Procesando {archivo}")
     df = pd.read_excel(ruta_entrada)
 
-    # Renombrar columnas
+    # Renombrar
     if reglas.get('rename'):
         df = df.rename(columns=reglas['rename'])
 
-    # Eliminar columnas
+    # Drop columnas
     cols_drop = [c for c in reglas.get('drop', []) if c in df.columns]
     if cols_drop:
         df = df.drop(columns=cols_drop)
 
-    # ---------------------------------------------
-    # REGLA ESPECIAL: SOLO MÉDICOS (ARCHIVO 9)
-    # ---------------------------------------------
-    if archivo == 'df_clinico_FILTRADO_eventos.xlsx' and 'tipo' in df.columns:
+    # Normalización / Filtro por tipo
+    accion = reglas.get('accion_tipo')
+    if accion:
+        col_tipo = 'tipo_profesional' if 'tipo_profesional' in df.columns else 'tipo'
+        if col_tipo in df.columns:
+            if accion == 'normalizar':
+                df = normalizar_tipo(df, col_tipo)
+            elif accion == 'filtrar_medicos':
+                df = normalizar_y_filtrar_medicos(df, col_tipo)
 
-        df['tipo'] = (
-            df['tipo']
-            .astype(str)
-            .str.strip()
-            .str.lower()
-        )
+            logging.info(f"Aplicada acción '{accion}' | Filas: {len(df)}")
 
-        df.loc[df['tipo'] == 'médico cirujano', 'tipo'] = 'médico'
-        df = df[df['tipo'] == 'médico'].copy()
-        df['tipo'] = 'Médico'
-
-        logging.info(f"Filtrado solo Médicos | Filas finales: {len(df)}")
-
-    # Guardar salida
     df.to_excel(ruta_salida, index=False)
     logging.info(f"Archivo generado: {ruta_salida}")
 
