@@ -95,7 +95,7 @@ try:
         AND PAADM_PAAdm2_DR->PA_Adm2DischargeSummary->DIS_PADischargeSummary_DR->DIS_Date>='2026-01-07'
         -- SOLO ALTAS MÉDICAS
         AND PAADM_PAAdm2_DR->PA_Adm2DischargeSummary->DIS_PADischargeSummary_DR->DIS_ModeOfSeparation_DR IS NOT NULL
-        /*AND PAADM_PAAdm2_DR->PA_Adm2DischargeSummary->DIS_PADischargeSummary_DR->DIS_CareProv_DR->CTPCP_CarPrvTp_DR->CTCPT_Desc IN (
+        AND PAADM_PAAdm2_DR->PA_Adm2DischargeSummary->DIS_PADischargeSummary_DR->DIS_CareProv_DR->CTPCP_CarPrvTp_DR->CTCPT_Desc IN (
         'Médico',
         'Médico Cirujano', 
         'Psiquiatria',
@@ -105,7 +105,7 @@ try:
         'Cirujano Dentista',
         'Ginecólogo',
         'Ginecóloga'
-        )*/;
+        );
     """
 
     cursor.execute(query)
