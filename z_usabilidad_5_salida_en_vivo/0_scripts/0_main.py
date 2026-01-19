@@ -30,7 +30,8 @@ scripts = [
     os.path.join(BASE_DIR, "8_cuestionario_QTCERIESGO.py"),
     os.path.join(BASE_DIR, "90_crear_resumen.py"),
     os.path.join(BASE_DIR, "98_limpiar_antes_de_subir.py"),
-    os.path.join(BASE_DIR, "99_subir_a_google_sheets.py",
+    os.path.join(BASE_DIR, "99_subir_a_google_sheets.py"),
+    os.path.join(BASE_DIR, "100_subir_a_sql.py",
     ),
 ]
 
