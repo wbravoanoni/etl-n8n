@@ -85,7 +85,7 @@ try:
                 QUESDate >= '2026-01-01'
                 AND PAADM_ADMDATE >= '2026-01-01'
                 -- AND PAADM_Hospital_DR->HOSP_RowId = 10448  -- Si necesitas filtrar por hospital específico
-                AND PAADM_CurrentWard_DR IN (416, 402,417,399,428,415);
+                AND PAADM_CurrentWard_DR IN (416, 402,417,509,428,415);
         """
 
     cursor.execute(query)

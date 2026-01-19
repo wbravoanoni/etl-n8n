@@ -93,7 +93,7 @@ try:
         'Ginecóloga'
         )
         -- AND PAADM_DepCode_DR->CTLOC_Hospital_DR = 10448
-        AND PAADM_CurrentWard_DR IN (416,402,417,399,428,415);
+        AND PAADM_CurrentWard_DR IN (416,402,417,509,428,415);
     """
 
     cursor.execute(query)

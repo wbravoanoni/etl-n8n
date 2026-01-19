@@ -80,7 +80,7 @@ try:
         WHERE PAADM_ADMDATE >= '2025-01-01' 
         AND PAADM_TYPE = 'I'
         -- AND PAADM_DepCode_DR->CTLOC_Hospital_DR = 10448
-        AND PAADM_CurrentWard_DR in (416,402,417,399,428,415)
+        AND PAADM_CurrentWard_DR in (416,402,417,509,428,415)
         AND PAADM_VISITSTATUS='A' ;
     """
 

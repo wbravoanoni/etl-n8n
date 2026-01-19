@@ -100,7 +100,7 @@ try:
         -- AND PAADM_Hospital_DR = 10448
         AND PAADM_Type = 'I' 
         AND PAADM_VISITSTATUS='A'
-        AND PAADM_CurrentWard_DR in (416,402,417,399,428,415);
+        AND PAADM_CurrentWard_DR in (416,402,417,509,428,415);
     """
 
     cursor.execute(query)
