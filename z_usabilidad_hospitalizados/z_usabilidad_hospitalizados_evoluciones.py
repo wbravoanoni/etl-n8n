@@ -151,7 +151,7 @@ try:
         convert(varchar, NOT_ParRef->MRADM_ADM_DR->PAADM_DischgTime, 108)
         from SQLUser.MR_NursingNotes
         where
-            NOT_Date >= DATEADD(MONTH, -12, CURRENT_DATE)
+            NOT_Date >= DATEADD(MONTH, -6, CURRENT_DATE)
             and NOT_Hospital_DR = 10448
             AND NOT_ParRef->MRADM_ADM_DR->PAAdm_Type='I'
     '''
