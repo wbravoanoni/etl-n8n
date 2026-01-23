@@ -3,33 +3,33 @@ import math
 from openpyxl import load_workbook, Workbook
 from openpyxl.styles import Font, Alignment
 
-# =========================================================
+# =====================================================
 # CONFIGURACIÓN LOGS
-# =========================================================
+# =====================================================
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s - %(levelname)s - %(message)s"
 )
 
-# =========================================================
+# =====================================================
 # ARCHIVOS
-# =========================================================
+# =====================================================
 archivo_entrada = (
     "z_usabilidad_5_salida_en_vivo/3_resultados/"
-    "9_hospitalizados_dias_pro_consolidado.xlsx"
+    "9_hospitalizados_dias_paso2_reglas_clinicas.xlsx"
 )
 
 archivo_salida = (
     "z_usabilidad_5_salida_en_vivo/3_resultados/"
-    "9_hospitalizados_dias_pro2.xlsx"
+    "9_hospitalizados_dias_paso3_consolidado.xlsx"
 )
 
 MINUTOS_DIA = 1440
 
+# =====================================================
+# PROCESO PRINCIPAL
+# =====================================================
 try:
-    # =====================================================
-    # LECTURA ARCHIVO BASE
-    # =====================================================
     wb = load_workbook(archivo_entrada)
     ws = wb.active
 
@@ -39,15 +39,16 @@ try:
     filas = list(ws.iter_rows(min_row=2, values_only=True))
     logging.info(f"Filas originales: {len(filas)}")
 
-    # =====================================================
-    # AGRUPACIÓN POR EPISODIO
-    # =====================================================
     resumen = {}
 
+    # -------------------------------------------------
+    # AGRUPACIÓN POR EPISODIO (SOLO MINUTOS)
+    # -------------------------------------------------
     for row in filas:
+
         episodio = row[idx["episodio"]]
 
-        min_srv = row[idx["minutos_estadia_servicio_sum"]]
+        min_srv = row[idx["minutos_estadia_servicio"]]
         min_epi = row[idx["minutos_estadia_episodio"]]
 
         if episodio not in resumen:
@@ -85,15 +86,8 @@ try:
         min_srv_total = data["minutos_servicio"]
         min_epi_total = data["minutos_episodio"]
 
-        dias_srv = (
-            math.ceil(min_srv_total / MINUTOS_DIA)
-            if min_srv_total > 0 else 0
-        )
-
-        dias_epi = (
-            math.ceil(min_epi_total / MINUTOS_DIA)
-            if min_epi_total > 0 else 0
-        )
+        dias_srv = math.ceil(min_srv_total / MINUTOS_DIA) if min_srv_total > 0 else 0
+        dias_epi = math.ceil(min_epi_total / MINUTOS_DIA) if min_epi_total > 0 else 0
 
         ws_out.append([
             episodio,
@@ -104,10 +98,10 @@ try:
         ])
 
     for col in ws_out.columns:
-        ws_out.column_dimensions[col[0].column_letter].width = 32
+        ws_out.column_dimensions[col[0].column_letter].width = 36
 
     wb_out.save(archivo_salida)
     logging.info(f"Archivo generado correctamente: {archivo_salida}")
 
 except Exception as e:
-    logging.error(f"Error en la prueba de agrupación: {e}")
+    logging.error(f"Error en consolidación PASO 3: {e}")

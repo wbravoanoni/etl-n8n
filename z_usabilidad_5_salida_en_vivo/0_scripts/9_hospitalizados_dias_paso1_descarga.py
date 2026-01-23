@@ -13,7 +13,7 @@ logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s - %(levelname)s - %(message)s',
     handlers=[
-        logging.FileHandler("z_usabilidad_5_salida_en_vivo/logs/9_hospitalizados_dias.log"),
+        logging.FileHandler("z_usabilidad_5_salida_en_vivo/logs/9_hospitalizados_dias_paso1_descarga.log"),
         logging.StreamHandler()
     ]
 )
@@ -29,7 +29,7 @@ iris_connection_string = os.getenv("CONEXION_STRING")
 iris_user = os.getenv("DB_USER")
 iris_password = os.getenv("DB_PASSWORD")
 
-archivo_excel = "z_usabilidad_5_salida_en_vivo/1_entrada/9_hospitalizados_dias.xlsx"
+archivo_excel = "z_usabilidad_5_salida_en_vivo/1_entrada/9_hospitalizados_dias_paso1_descarga.xlsx"
 
 # =========================================================
 # LIMPIEZA DE ARCHIVO PREVIO
