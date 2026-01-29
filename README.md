@@ -13,4 +13,8 @@
    - ssh dtd@10.68.96.120 "crontab -l > /tmp/crontab.txt"
    - scp dtd@10.68.96.120:/tmp/crontab.txt "C:\Users\Winston Bravo\Desktop\etl-n8n"
 
-6. Respaldo de scripst 
+6. Respaldo de scripst
+   - tar -czvf /tmp/etl-n8n.tar.gz -C /home/dtd/Documentos/automatizacion etl-n8n
+   - scp dtd@10.68.96.120:/tmp/etl-n8n.tar.gz "C:\Users\Winston Bravo\Desktop"
+
+ 

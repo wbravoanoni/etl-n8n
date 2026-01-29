@@ -49,7 +49,7 @@ def main():
     # OBTENER DATOS DE LA TABLA
     # ============================================================
 
-    table_name = "z_pabellon_uso_gestion_tiempo_transcurrido"
+    table_name = "z_pabellon_uso_gestion_tiempo_transcurridos"
 
     try:
         cursor.execute(f"SELECT * FROM {table_name}")
