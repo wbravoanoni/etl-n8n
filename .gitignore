@@ -14,3 +14,9 @@ z_usabilidad_5_salida_en_vivo/logs
 z_usabilidad_5_salida_en_vivo/pbix
 env
 z_usabilidad_5_salida_en_vivo/99_pacientes_hospitalizados/*.xlsx
+z_cuestionario/reportes/*.xlsx
+z_reporte_semanal_oficina_ges/resultados/*.xlsx
+z_teamcoder/entrada/*.xlsx
+z_teamcoder/resultados/*.txt
+z_teamcoder/resultados/*.xlsx
+zz_pruebas/logs/log_fecha_ejecucion.state
