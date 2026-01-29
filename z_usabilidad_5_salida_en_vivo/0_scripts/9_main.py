@@ -20,7 +20,9 @@ FECHA_EJECUCION = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 scripts = [
     os.path.join(BASE_DIR, "9_hospitalizados_dias_paso1_descarga.py"),
     os.path.join(BASE_DIR, "9_hospitalizados_dias_paso2_reglas_clinicas.py"),
-    os.path.join(BASE_DIR, "9_hospitalizados_dias_paso3_consolidado.py"),
+    os.path.join(BASE_DIR, "9_hospitalizados_dias_paso3_consolidar.py"),
+    os.path.join(BASE_DIR, "9_hospitalizados_dias_paso4_resumen_fechas.py"),
+    os.path.join(BASE_DIR, "9_hospitalizados_dias_paso5_ajuste_comparacion.py"),
 ]
 
 # =====================================================

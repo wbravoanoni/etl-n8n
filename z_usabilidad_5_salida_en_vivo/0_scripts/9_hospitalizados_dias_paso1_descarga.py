@@ -111,7 +111,7 @@ try:
         AND WARD.WARD_Desc IS NOT NULL
         AND ADM.PAADM_VISITSTATUS IN ('A','D')
         AND ADM.PAADM_ADMDATE < DATEADD('day', 1, CURRENT_DATE)
-        AND WARD_LocationDR <> 4709
+        AND WARD_LocationDR NOT IN (4709,3140)
     ORDER BY
         ADM.PAADM_ADMNO,
         TRANS.TRANS_StartDate,
