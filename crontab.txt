@@ -46,7 +46,7 @@
 
 0 3 * * * /bin/bash -c 'cd /home/dtd/Documentos/automatizacion/etl-n8n && source /home/dtd/Documentos/automatizacion/etl-n8n/env/bin/activate && /home/dtd/Documentos/automatizacion/etl-n8n/env/bin/python z_cuestionario/z0_cuestionario.py .py  >>/home/dtd/Documentos/automatizacion/etl-n8n/z_cuestionario/logs/cron19.log 2>&1'
 
-0 9 * * 5 /bin/bash -c 'cd /home/dtd/Documentos/automatizacion/etl-n8n && source /home/dtd/Documentos/automatizacion/etl-n8n/env/bin/activate && /home/dtd/Documentos/automatizacion/etl-n8n/env/bin/python z_cuestionario/z_cuestionario_NRS2002.py >> /home/dtd/Documentos/automatizacion/etl-n8n/z_usabilidad_coloproctologia/logs/cron19.log 2>&1'
+0 9 * * 5 /bin/bash -c 'cd /home/dtd/Documentos/automatizacion/etl-n8n && source /home/dtd/Documentos/automatizacion/etl-n8n/env/bin/activate && /home/dtd/Documentos/automatizacion/etl-n8n/env/bin/python z_cuestionario/z_cuestionario_NRS2002.py >> /home/dtd/Documentos/automatizacion/etl-n8n/z_usabilidad_coloproctologia/logs/cron20.log 2>&1'
 
 # MESA DE SERVICIO ***********************************************
 
@@ -86,7 +86,7 @@
 
 # TEAMCODER ***********************************************
 
-00 8 * * * /bin/bash -c 'cd /home/dtd/Documentos/automatizacion/cargas_z && source /home/dtd/Documentos/automatizacion/cargas_z/env/bin/activate && /home/dtd/Documentos/automatizacion/cargas_z/env/bin/python z_teamcoder/z0_main.py >>/home/dtd/Documentos/automatizacion/cargas_z/z_teamcoder/logs/z0_main.log 2>&1'
+00 8 * * * /bin/bash -c 'cd /home/dtd/Documentos/automatizacion/etl-n8n && source /home/dtd/Documentos/automatizacion/cargas_z/env/bin/activate && /home/dtd/Documentos/automatizacion/etl-n8n/env/bin/python z_teamcoder/z0_main.py >>/home/dtd/Documentos/automatizacion/etl-n8n/z_teamcoder/logs/z0_main.log 2>&1'
 
 # Actualizacion plantilla Listado de cirugias
 
@@ -98,3 +98,11 @@
 
 # Envio reporte semana Oficina GES
 00 9 * * 1 /bin/bash -c 'cd /home/dtd/Documentos/automatizacion/etl-n8n && source /home/dtd/Documentos/automatizacion/etl-n8n/env/bin/activate && /home/dtd/Documentos/automatizacion/etl-n8n/env/bin/python z_reporte_semanal_oficina_ges/z0_reporte_semanal_oficina_ges_main.py  >> /home/dtd/Documentos/automatizacion/etl-n8n/z_reporte_semanal_oficina_ges/logs/cron19.log 2>&1'
+
+# monitoreo 5° salida en vivo
+*/20 6-23 * * * /bin/bash -c 'cd /home/dtd/Documentos/automatizacion/etl-n8n && source /home/dtd/Documentos/automatizacion/etl-n8n/env/bin/activate && /home/dtd/Documentos/automatizacion/etl-n8n/env/bin/python z_usabilidad_5_salida_en_vivo/0_scripts/0_main.py >>/home/dtd/Documentos/automatizacion/etl-n8n/z_usabilidad_5_salida_en_vivo/logs/cron12.log 2>&1' 
+
+50 23 * * * /bin/bash -c 'cd /home/dtd/Documentos/automatizacion/etl-n8n && source /home/dtd/Documentos/automatizacion/etl-n8n/env/bin/activate && /home/dtd/Documentos/automatizacion/etl-n8n/env/bin/python z_usabilidad_5_salida_en_vivo/0_scripts/7_pacientes_hospitalizados_append.py >> /home/dtd/Documentos/automatizacion/etl-n8n/z_usabilidad_5_salida_en_vivo/0_scripts/logs/cron20.log 2>&1'
+
+# cuestionario_NRS2002_ayer
+*0 9 * * * /bin/bash -c 'cd /home/dtd/Documentos/automatizacion/etl-n8n && source /home/dtd/Documentos/automatizacion/etl-n8n/env/bin/activate && /home/dtd/Documentos/automatizacion/etl-n8n/env/bin/python z_cuestionario/z_cuestionario_NRS2002_ayer.py >>/home/dtd/Documentos/automatizacion/etl-n8n/z_cuestionario/logs/cron12.log 2>&1'
