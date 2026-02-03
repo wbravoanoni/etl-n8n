@@ -78,7 +78,8 @@ try:
         NOT_ParRef->MRADM_ADM_DR->PAADM_PAPMI_DR->PAPMI_Name as AppPaternoPaciente,
         NOT_ParRef->MRADM_ADM_DR->PAADM_PAPMI_DR->PAPMI_Name3 as AppMaternoPaciente,
         NOT_ParRef->MRADM_ADM_DR->PAADM_CurrentWard_DR->WARD_ROWID,
-        NOT_ParRef->MRADM_ADM_DR->PAADM_CurrentWard_DR->WARD_Desc AS local_actual
+        NOT_ParRef->MRADM_ADM_DR->PAADM_CurrentWard_DR->WARD_Desc AS local_actual,
+        NOT_ParRef->MRADM_ADM_DR->PAADM_CurrentWard_DR->WARD_LocationDR
         from SQLUser.MR_NursingNotes
         WHERE
             NOT_Date >= '2026-01-07'

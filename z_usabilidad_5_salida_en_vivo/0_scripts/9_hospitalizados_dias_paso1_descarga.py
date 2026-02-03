@@ -99,13 +99,15 @@ try:
         ADM.PAADM_PAPMI_DR->PAPMI_ID AS rut_paciente,
         ADM.PAADM_PAPMI_DR->PAPMI_PAPER_DR->PAPER_Name2 AS nombre_paciente,
         ADM.PAADM_PAPMI_DR->PAPMI_PAPER_DR->PAPER_Name  AS apellidop_paciente,
-        ADM.PAADM_PAPMI_DR->PAPMI_PAPER_DR->PAPER_Name3 AS apellidom_paciente
+        ADM.PAADM_PAPMI_DR->PAPMI_PAPER_DR->PAPER_Name3 AS apellidom_paciente,
+        WARD_LocationDR
     FROM PA_Adm ADM
     INNER JOIN PA_AdmTransaction TRANS
         ON ADM.PAADM_RowID = TRANS.TRANS_ParRef
     LEFT JOIN PAC_Ward WARD
         ON TRANS.TRANS_Ward_DR = WARD.WARD_RowID
     WHERE ADM.PAADM_ADMDATE >= '2026-01-01'
+        AND TRANS.TRANS_StartDate >= '2026-01-07'
         AND PAADM_HOSPITAL_DR->HOSP_code = '112100'
         AND ADM.PAADM_TYPE = 'I'
         AND WARD.WARD_Desc IS NOT NULL

@@ -43,7 +43,8 @@ ARCHIVOS_RESULTADOS = {
     '5_epicrisis_pro.xlsx': 'epicrisis',
     '6_evoluciones_pro.xlsx': 'evoluciones',
     '7_pacientes_hospitalizados_pro.xlsx': 'pacientes_hospitalizados',
-    '8_cuestionario_QTCERIESGO_pro.xlsx': 'cuestionario_qt'
+    '8_cuestionario_QTCERIESGO_pro.xlsx': 'cuestionario_qt',
+    '10_indicadores_cumplimiento_paso2.xlsx': 'indicadores_cumplimiento'
 }
 
 # ======================================================
