@@ -103,7 +103,11 @@ def aplicar_flag(
         df['FECHA'],
         dayfirst=dayfirst
     ).dt.normalize()
-    df['SERVICIO'] = df['SERVICIO'].astype(int)
+
+    df['SERVICIO'] = pd.to_numeric(
+    df['SERVICIO'],
+    errors='coerce'
+).astype('Int64')
 
     df[nombre_flag] = 'SI'
 

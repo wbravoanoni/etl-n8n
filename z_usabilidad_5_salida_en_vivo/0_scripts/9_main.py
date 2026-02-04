@@ -42,7 +42,7 @@ def ejecutar_script(script_path):
 
         duracion = (datetime.now() - inicio).total_seconds()
 
-        print(f"✔ Finalizado en {duracion:.2f} segundos")
+        print(f" Finalizado en {duracion:.2f} segundos")
         if resultado.stdout:
             print("— STDOUT —")
             print(resultado.stdout)

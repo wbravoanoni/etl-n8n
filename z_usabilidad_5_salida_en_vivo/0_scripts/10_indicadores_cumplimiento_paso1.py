@@ -95,7 +95,7 @@ df.drop(columns=["inicio_servicio", "termino_servicio"], inplace=True)
 # ======================================================
 df.to_excel(RUTA_SALIDA, index=False)
 
-print("✔ Archivo generado correctamente")
-print(f"✔ Ruta: {RUTA_SALIDA}")
-print(f"✔ Fecha/hora de ejecución usada como término: {fecha_ejecucion} {hora_ejecucion}")
-print(f"✔ Registros finales: {len(df)}")
+print("Archivo generado correctamente")
+print(f"Ruta: {RUTA_SALIDA}")
+print(f"Fecha/hora de ejecución usada como término: {fecha_ejecucion} {hora_ejecucion}")
+print(f"Registros finales: {len(df)}")

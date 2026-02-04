@@ -171,6 +171,6 @@ resultado = resultado[
 
 resultado.to_excel(RUTA_SALIDA, index=False)
 
-print("✔ PASO 2 + métricas finales generado correctamente")
-print(f"✔ Archivo: {RUTA_SALIDA}")
-print(f"✔ Filas: {len(resultado)}")
+print("PASO 2 + métricas finales generado correctamente")
+print(f"Archivo: {RUTA_SALIDA}")
+print(f"Filas: {len(resultado)}")
