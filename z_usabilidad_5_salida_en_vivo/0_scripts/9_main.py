@@ -29,7 +29,7 @@ scripts = [
 # FUNCIÓN EJECUCIÓN
 # =====================================================
 def ejecutar_script(script_path):
-    print(f"\n▶ Ejecutando: {os.path.basename(script_path)}")
+    print(f"\n Ejecutando: {os.path.basename(script_path)}")
     inicio = datetime.now()
 
     try:
@@ -56,7 +56,7 @@ def ejecutar_script(script_path):
         return True
 
     except subprocess.CalledProcessError as e:
-        print("✖ ERROR en ejecución")
+        print(" ERROR en ejecución")
         print("— STDERR —")
         print(e.stderr)
 
