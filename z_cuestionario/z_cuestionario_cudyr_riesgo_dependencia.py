@@ -133,7 +133,8 @@ try:
         FROM questionnaire.QTCERIESGO a
         INNER JOIN SS_User b ON a.QUESCreateUserDR = b.SSUSR_RowId
         LEFT JOIN PA_Adm c ON a.QUESPAAdmDR = c.PAADM_RowID
-        WHERE QUESDate >= CAST(DATEADD(MONTH, -6, GETDATE()) AS DATE)
+        WHERE c.PAADM_ADMDATE >=  CAST(DATEADD(MONTH, -12, GETDATE()) AS DATE)  
+        AND QUESDate >= CAST(DATEADD(MONTH, -6, GETDATE()) AS DATE)
         AND PAADM_DepCode_DR->CTLOC_Hospital_DR = 10448;
     """
 
