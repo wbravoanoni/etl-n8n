@@ -16,7 +16,7 @@ os.makedirs("logs", exist_ok=True)
 logging.basicConfig(level=logging.INFO, 
                     format='%(asctime)s - %(threadName)s - %(processName)s %(levelname)s - %(message)s',
                     handlers=[logging.FileHandler("logs/z_usabilidad_coloproctologia_sol_quirurgica.log"),
-                        Logging.StreamHandler()])
+                        logging.StreamHandler()])
 
 # Cargar variables de entorno desde el archivo .env
 load_dotenv()
