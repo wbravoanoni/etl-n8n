@@ -133,10 +133,15 @@ for i, row in df.iterrows():
 
 df.drop(columns=['hora_ingreso_quirofano_dt'], inplace=True)
 
-columnas_finales = columnas_objetivo + ['hora_ingreso_siguiente']
+fecha_actualizacion = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+df['fechaActualizacion'] = fecha_actualizacion
+
+columnas_finales = columnas_objetivo + ['hora_ingreso_siguiente', 'fechaActualizacion']
 df = df[columnas_finales]
 
 df = df.where(pd.notnull(df), None)
+
+
 
 # ============================================================
 # TRUNCATE
@@ -152,8 +157,8 @@ insert_query = """
     INSERT INTO z_pabellon_uso_gestion_tiempo_transcurrido
     (episodio, fecha_cirugia, fecha_ingreso_quirofano, hora_ingreso_quirofano,
      fecha_egreso_quirofano, hora_egreso_quirofano, pabellon,
-     tipo_cirugia, estado_cirugia, hora_ingreso_siguiente)
-    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+     tipo_cirugia, estado_cirugia, hora_ingreso_siguiente, fechaActualizacion)
+    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
 """
 
 cursor.executemany(insert_query, df.values.tolist())
