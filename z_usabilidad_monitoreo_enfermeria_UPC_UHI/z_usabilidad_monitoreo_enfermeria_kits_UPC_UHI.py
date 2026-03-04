@@ -105,6 +105,7 @@ try:
         WHERE
             oi.OEORI_ARCOS_DR IS NOT NULL
             AND oi.OEORI_Date >=  '2026-01-07'
+            AND PAADM_DepCode_DR->CTLOC_Hospital_DR = 10448
             AND adm.PAADM_CurrentWard_DR IN (416,402,417,509,428,415)
             AND oi.OEORI_ARCOS_DR->ARCOS_Desc LIKE 'KIT%'
         GROUP BY
@@ -113,8 +114,6 @@ try:
             oi.OEORI_Date,
             oi.OEORI_ARCOS_DR,
             oi.OEORI_UserAdd
-        ORDER BY
-            oi.OEORI_Date DESC
     """
 
     cursor_iris.execute(query)
