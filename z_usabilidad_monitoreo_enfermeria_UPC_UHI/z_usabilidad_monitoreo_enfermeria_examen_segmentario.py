@@ -20,7 +20,7 @@ logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s - %(levelname)s - %(message)s',
     handlers=[
-        logging.FileHandler("logs/z_usabilidad_monitoreo_enfermeria_kits_UPC_UHI.log"),
+        logging.FileHandler("logs/z_usabilidad_monitoreo_enfermeria_examen_segmentario.log"),
         logging.StreamHandler()
     ]
 )
@@ -29,19 +29,19 @@ logging.basicConfig(
 # Crear tabla MySQL (DROP + CREATE)
 # =========================
 def crear_tabla(cursor_mysql):
-    cursor_mysql.execute("DROP TABLE IF EXISTS z_usabilidad_monitoreo_enfermeria_kits_UPC_UHI")
+    cursor_mysql.execute("DROP TABLE IF EXISTS z_usabilidad_monitoreo_enfermeria_examen_segmentario")
 
     create_table_sql = """
-    CREATE TABLE z_usabilidad_monitoreo_enfermeria_kits_UPC_UHI (
-        Nro_Episodio VARCHAR(50),
-        Sala VARCHAR(255),
-        Fecha_Orden VARCHAR(50),
-        Nombre_Kit VARCHAR(255),
-        Usuario VARCHAR(255),
-        Cant_Items_Kit VARCHAR(20),
+    CREATE TABLE z_usabilidad_monitoreo_enfermeria_examen_segmentario (
+        episodio VARCHAR(50),
+        fecha_registro VARCHAR(255),
+        hora_registro VARCHAR(50),
+        creador VARCHAR(50),
+        local VARCHAR(50),
+        CantExamenes VARCHAR(255),
         fechaActualizacion VARCHAR(25),
-        INDEX idx_episodio (Nro_Episodio),
-        INDEX idx_Fecha_Orden (Fecha_Orden)
+        INDEX idx_episodio (episodio),
+        INDEX idx_Fecha_Orden (fecha_registro)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
     """
     cursor_mysql.execute(create_table_sql)
@@ -88,33 +88,21 @@ try:
     cursor_iris = conn_iris.cursor()
 
     query = """
-        SELECT
-            adm.PAADM_ADMNO,
-            w.WARD_Desc,
-            oi.OEORI_Date,
-            oi.OEORI_ARCOS_DR->ARCOS_Desc,
-            oi.OEORI_UserAdd->SSUSR_Name,
-            COUNT(*)
-        FROM OE_OrdItem oi
-        INNER JOIN OE_Order o
-            ON oi.OEORI_OEORD_ParRef = o.OEORD_RowId
-        INNER JOIN PA_ADM adm
-            ON o.OEORD_Adm_DR = adm.PAADM_RowId
-        LEFT JOIN PAC_Ward w
-            ON adm.PAADM_CurrentWard_DR = w.WARD_RowID
-        WHERE
-            oi.OEORI_ARCOS_DR IS NOT NULL
-            AND oi.OEORI_Date >=  '2026-01-07'
-            AND adm.PAADM_CurrentWard_DR IN (416,402,417,509,428,415)
-            AND oi.OEORI_ARCOS_DR->ARCOS_Desc LIKE 'KIT%'
-        GROUP BY
-            adm.PAADM_ADMNO,
-            w.WARD_Desc,
-            oi.OEORI_Date,
-            oi.OEORI_ARCOS_DR,
-            oi.OEORI_UserAdd
-        ORDER BY
-            oi.OEORI_Date DESC
+        SELECT 
+            o.OBS_ParRef->MRADM_ADM_DR->PAADM_ADMNo AS episodio,
+            o.OBS_Date as fecha_registro,
+            o.OBS_Time as hora_registro,
+            OBS_User_DR->SSUSR_Name as creador,
+            OBS_User_DR->SSUSR_DefaultDept_DR->CTLOC_Desc as "local",
+            COUNT(DISTINCT o.OBS_Entry_DR) AS CantExamenes
+        FROM MR_Observations o
+        WHERE OBS_ParRef >= 7700000 and o.OBS_Date >= '2026-01-07'
+        and  OBS_ParRef->MRADM_ADM_DR->PAADM_Hospital_DR = 10448
+        and OBS_User_DR->SSUSR_DefaultDept_DR in (4087,3815,4113,4696,4060,4091)
+        AND o.OBS_Item_DR IN (270,271,272,273,275,276,277,278,279,280,281,282,283,284,286,364,410,467,801,818,876,939,960)
+        AND OBS_User_DR->SSUSR_CareProv_DR->CTPCP_CarPrvTp_DR=57
+        GROUP BY 
+            o.OBS_ParRef->MRADM_ADM_DR->PAADM_ADMNo,OBS_User_DR->SSUSR_Name,o.OBS_Date;
     """
 
     cursor_iris.execute(query)
@@ -159,13 +147,13 @@ try:
     # Insert
     # =========================
     insert_query = """
-        INSERT INTO z_usabilidad_monitoreo_enfermeria_kits_UPC_UHI (
-            Nro_Episodio,
-            Sala,
-            Fecha_Orden,
-            Nombre_Kit,
-            Usuario,
-            Cant_Items_Kit,
+        INSERT INTO z_usabilidad_monitoreo_enfermeria_examen_segmentario (
+            episodio,
+            fecha_registro,
+            hora_registro,
+            creador,
+            local,
+            CantExamenes,
             fechaActualizacion
         ) VALUES (%s, %s, %s, %s, %s, %s, %s)
     """
