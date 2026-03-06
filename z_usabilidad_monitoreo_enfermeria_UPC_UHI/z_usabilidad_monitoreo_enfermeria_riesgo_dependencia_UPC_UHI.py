@@ -56,6 +56,7 @@ def crear_tabla_z_cudyr_riesgo_dependencia(cursor_mysql):
         Q15 VARCHAR(2),
         Q16 VARCHAR(2),
         Q17 VARCHAR(1),
+        Q18 VARCHAR(5),
 
         fechaActualizacion VARCHAR(19),
 
@@ -129,7 +130,7 @@ try:
             c.PAADM_CurrentWard_DR->WARD_Desc AS local_actual,
             a.Q01,a.Q02,a.Q03,a.Q04,a.Q05,a.Q06,a.Q07,
             a.Q08,a.Q09,a.Q10,a.Q11,a.Q12,a.Q13,a.Q14,
-            a.Q15,a.Q16,a.Q17
+            a.Q15,a.Q16,a.Q17,a.Q18
         FROM questionnaire.QTCERIESGO a
         INNER JOIN SS_User b ON a.QUESCreateUserDR = b.SSUSR_RowId
         LEFT JOIN PA_Adm c ON a.QUESPAAdmDR = c.PAADM_RowID
@@ -182,14 +183,14 @@ try:
             fecha_creacion, hora_creacion, puntaje, usuario_creador,
             episodio, local_actual,
             Q01,Q02,Q03,Q04,Q05,Q06,Q07,Q08,Q09,Q10,
-            Q11,Q12,Q13,Q14,Q15,Q16,Q17,
+            Q11,Q12,Q13,Q14,Q15,Q16,Q17,Q18,
             fechaActualizacion
         ) VALUES (
             %s, %s, %s, %s,
             %s, %s,
             %s, %s, %s, %s, %s, %s, %s, %s, %s, %s,
             %s, %s, %s, %s, %s, %s, %s,
-            %s
+            %s, %s
         )
     """
 
