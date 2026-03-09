@@ -10,9 +10,10 @@ scripts = [
     "z_usabilidad_monitoreo_enfermeria_downtown_UPC_UHI.py",
     "z_usabilidad_monitoreo_enfermeria_riesgo_dependencia_UPC_UHI.py",
     "z_usabilidad_monitoreo_enfermeria_kits_UPC_UHI.py",
-    "z_usabilidad_monitoreo_enfermeria_examen_segmentario.py",
-    "z_usabilidad_monitoreo_enfermeria_ucp_uhi.py"
+    "z_usabilidad_monitoreo_enfermeria_examen_segmentario.py"
 ]
+
+# "z_usabilidad_monitoreo_enfermeria_ucp_uhi.py"
 
 if __name__ == "__main__":
     for script in scripts:
