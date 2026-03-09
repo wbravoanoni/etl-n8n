@@ -11,12 +11,14 @@ from cryptography.fernet import Fernet
 load_dotenv(override=True)
 
 # Logging
-logging.basicConfig(level=logging.INFO,
-                    format='%(asctime)s - %(threadName)s - %(processName)s %(levelname)s - %(message)s',
-                    handlers=[logging.FileHandler("logs/z_usabilidad_qf_procedimientos.log"),
-                              logging.StreamHandler()])
-
-load_dotenv()
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(threadName)s - %(processName)s %(levelname)s - %(message)s',
+    handlers=[
+        logging.FileHandler("logs/z_usabilidad_qf_procedimientos.log"),
+        logging.StreamHandler()
+    ]
+)
 
 # Variables IRIS
 jdbc_driver_name = os.getenv('JDBC_DRIVER_NAME')
@@ -50,6 +52,7 @@ cursor_iris = None
 cursor_mysql = None
 
 try:
+
     # VALIDACIONES
     if not jdbc_driver_name or not jdbc_driver_loc:
         fail_and_exit("El nombre o la ruta del controlador JDBC no están configurados correctamente.")
@@ -77,45 +80,31 @@ try:
 
     cursor_iris = conn_iris.cursor()
 
-    # CONSULTA SQL
-    query = ''' 
-            SELECT %nolock DISTINCT 
-            OEORI_APPT_DR->APPT_Adm_DR->PAADM_ADMNO "nro_episodio",
-            OEORI_APPT_DR->APPT_PAPMI_DR->PAPMI_No AS "nro_registro",
-            OEORI_APPT_DR->APPT_Adm_DR->PAADM_DepCode_DR->CTLOC_DEP_DR->DEP_desc "descripcion_grupo_departamento",
-            OEORI_APPT_DR->APPT_AS_ParRef->AS_RES_ParRef->RES_CTLOC_DR->CTLOC_desc "descripcion_local_agendamiento",
-            OEORI_APPT_DR->APPT_AS_ParRef->AS_RES_ParRef->RES_Desc as "descripcion_recurso",
-            OEORI_APPT_DR->APPT_AS_ParRef->AS_RES_ParRef->RES_CTPCP_DR->CTPCP_Spec_DR->CTSPC_Desc as "descripcion_especialidad_recurso",
-            OEORI_APPT_DR->APPT_RBCServ_DR->SER_ARCIM_DR->ARCIM_desc as "descripcion_prestacion_agendada",
-            convert(varchar,OEORI_APPT_DR->APPT_DateComp,105) as "fecha_cita",
-            convert(varchar,OEORI_APPT_DR->APPT_TimeComp,108) as "hora_cita",
-            (CASE
-                    WHEN OEORI_APPT_DR->APPT_STATUS = 'P' then 'Agendado'
-                    WHEN OEORI_APPT_DR->APPT_STATUS = 'D' then 'Atendido'
-                    WHEN OEORI_APPT_DR->APPT_STATUS = 'X' then 'Cancelado'
-                    WHEN OEORI_APPT_DR->APPT_STATUS = 'A' then 'Llegó'
-                    WHEN OEORI_APPT_DR->APPT_STATUS = 'N' then 'No atendido'
-                    WHEN OEORI_APPT_DR->APPT_STATUS = 'T' then 'Transferido'
-                    WHEN OEORI_APPT_DR->APPT_STATUS = 'H' then 'En Espera'
-                    WHEN OEORI_APPT_DR->APPT_STATUS = 'S' then 'Llegó - No atendido'
-                    ELSE OEORI_APPT_DR->APPT_STATUS
-                end) AS "estado_cita",
-            OEORI_OrdDept_DR->CTLOC_desc "descripcion_local_solicitante",
-            OEORI_RecDep_DR->CTLOC_desc "descripcion_local_receptor",
-            convert(varchar,OEORI_SttDat,105) as "fecha_indicacion",
-            convert(varchar,OEORI_SttTim,108) as "hora_indicacion",
-            OEORI_UserAdd->SSUSR_Name "descripcion_profesional_genera_indicacion",
-            OEORI_Categ_DR->ORCAT_Desc "descripcion_categoria",
-            OEORI_SubCateg_DR->ARCIC_desc "descripcion_SubCategoria",
-            OEORI_ItmMast_DR->ARCIM_Code as "codigo_prestacion",
-            OEORI_ItmMast_DR->ARCIM_Desc as "descripcion_prestacion",
-            OEORI_ItemStat_DR->OSTAT_Desc as "descripcion_estado_indicacion"
-            from OE_OrdItem 
-            where 
-            OEORI_SttDat>='2025-04-23'
-            -- AND OEORI_APPT_DR->APPT_Adm_DR->PAADM_DepCode_DR->CTLOC_Hospital_DR = 10448
-            and OEORI_Doctor_DR->CTPCP_CarPrvTp_DR->CTCPT_RowId=65;
-            '''
+    # QUERY IRIS
+    query = '''
+    SELECT %nolock
+        OEORI_OEORD_ParRef->OEORD_Adm_DR->PAADM_ADMNo as episodio,
+        OEORI_Date as fecha_solicitado,
+        OEORI_TimeOrd as hora_solicitado,
+        OEORI_OEORD_ParRef->OEORD_Adm_DR->PAADM_PAPMI_DR->PAPMI_ID AS run,
+        OEORI_OEORD_ParRef->OEORD_Adm_DR->PAADM_PAPMI_DR->PAPMI_Name2 as nombres_paciente,
+        OEORI_OEORD_ParRef->OEORD_Adm_DR->PAADM_PAPMI_DR->PAPMI_Name as app_paterno,
+        OEORI_OEORD_ParRef->OEORD_Adm_DR->PAADM_PAPMI_DR->PAPMI_Name3 as app_materno,
+        OEORI_ItemStat_DR->OSTAT_Desc as estado_indicacion,
+        OEORI_ItmMast_DR->ARCIM_Code AS codigo_prestacion,
+        OEORI_ItmMast_DR->ARCIM_Desc AS prestacion_indicada,
+        OEORI_Doctor_DR->CTPCP_Code as rut_profesional,
+        OEORI_Doctor_DR->CTPCP_Desc as profesional,
+        OEORI_OrdDept_DR->CTLOC_desc as local_solicitante,
+        OEORI_RecDep_DR->CTLOC_desc as local_receptor
+
+    FROM OE_OrdItem 
+
+    WHERE  
+        OEORI_SttDat >= '2025-04-23'
+        AND OEORI_Doctor_DR->CTPCP_CarPrvTp_DR->CTCPT_RowId = 65
+        AND OEORI_Doctor_DR->CTPCP_CreatedHosp_DR = 10448
+    '''
 
     try:
         cursor_iris.execute(query)
@@ -151,33 +140,26 @@ try:
     except Exception as e:
         fail_and_exit(f"Error al truncar MySQL: {e}")
 
-    # INSERT
+    # INSERT MYSQL
     insert_query = """
         INSERT INTO z_usabilidad_qf_procedimientos (
-            nro_episodio,
-            nro_registro,
-            descripcion_grupo_departamento,
-            descripcion_local_agendamiento,
-            descripcion_recurso,
-            descripcion_especialidad_recurso,
-            descripcion_prestacion_agendada,
-            fecha_cita,
-            hora_cita,
-            estado_cita,
-            descripcion_local_solicitante,
-            descripcion_local_receptor,
-            fecha_indicacion,
-            hora_indicacion,
-            descripcion_profesional_genera_indicacion,
-            descripcion_categoria,
-            descripcion_SubCategoria,
+            episodio,
+            fecha_solicitado,
+            hora_solicitado,
+            run,
+            nombres_paciente,
+            app_paterno,
+            app_materno,
+            estado_indicacion,
             codigo_prestacion,
-            descripcion_prestacion,
-            descripcion_estado_indicacion,
+            prestacion_indicada,
+            rut_profesional,
+            profesional,
+            local_solicitante,
+            local_receptor,
             fechaActualizacion
         ) VALUES (
-            %s, %s, %s, %s, %s, %s, %s, %s, %s, %s,
-            %s, %s, %s, %s, %s, %s, %s, %s, %s, %s , %s
+            %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s
         )
     """
 
@@ -196,13 +178,18 @@ except Exception as e:
     fail_and_exit(f"Error inesperado: {e}")
 
 finally:
+
     if cursor_iris:
         cursor_iris.close()
+
     if conn_iris:
         conn_iris.close()
+
     if cursor_mysql:
         cursor_mysql.close()
+
     if conn_mysql:
         conn_mysql.close()
+
     if jpype.isJVMStarted():
         jpype.shutdownJVM()
