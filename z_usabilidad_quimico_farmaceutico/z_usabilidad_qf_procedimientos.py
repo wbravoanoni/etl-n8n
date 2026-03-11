@@ -96,7 +96,8 @@ try:
         OEORI_Doctor_DR->CTPCP_Code as rut_profesional,
         OEORI_Doctor_DR->CTPCP_Desc as profesional,
         OEORI_OrdDept_DR->CTLOC_desc as local_solicitante,
-        OEORI_RecDep_DR->CTLOC_desc as local_receptor
+        OEORI_RecDep_DR->CTLOC_desc as local_receptor,
+        OEORI_OEORD_ParRef->OEORD_Adm_DR->PAADM_TYPE AS "tipo_episodio"
 
     FROM OE_OrdItem 
 
@@ -157,9 +158,10 @@ try:
             profesional,
             local_solicitante,
             local_receptor,
+            tipo_episodio,
             fechaActualizacion
         ) VALUES (
-            %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s
+            %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s
         )
     """
 
