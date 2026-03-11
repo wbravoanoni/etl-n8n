@@ -102,7 +102,7 @@ try:
     FROM OE_OrdItem 
 
     WHERE  
-        OEORI_SttDat >= '2025-04-23'
+        OEORI_SttDat >= '2026-02-26'
         AND OEORI_Doctor_DR->CTPCP_CarPrvTp_DR->CTCPT_RowId = 65
         AND OEORI_Doctor_DR->CTPCP_CreatedHosp_DR = 10448
     '''
